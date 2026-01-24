@@ -1,4 +1,6 @@
 # Simple Makefile for a Go project
+export PATH := $(PATH):$(shell go env GOPATH)/bin
+
 
 # Build the application
 all: build test
