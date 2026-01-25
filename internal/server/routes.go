@@ -1,6 +1,7 @@
 package server
 
 import (
+	"collegeWaleServer/internal/database"
 	auth_handler "collegeWaleServer/internal/handlers/auth"
 	service "collegeWaleServer/internal/services/auth"
 	"net/http"
@@ -9,7 +10,6 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"gorm.io/gorm"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
@@ -17,13 +17,15 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 
+	dbService := database.New()
+
 	authGroup := e.Group("/auth")
 	apiV1Group := e.Group("/api/v1")
 	apiV1Group.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey: []byte(os.Getenv("JWT_SECRET_KEY")),
 	}))
 
-	authService := service.NewAuth(&gorm.DB{})
+	authService := service.NewAuthService(dbService.DB)
 
 	auth_handler.NewAuthHandler(authGroup, authService)
 
