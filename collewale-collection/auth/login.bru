@@ -1,0 +1,23 @@
+meta {
+  name: login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{hostv1}}/login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "studentId":"211911",
+    "password":"QWRtaW5AMTIzNA=="
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
