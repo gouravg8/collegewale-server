@@ -15,4 +15,5 @@ type College struct {
 	CourseType enums.CourseType `gorm:"not null; default:'GNM'"`
 	Seats      uint             `gorm:"not null"`
 	Logo       string
+	IsActive   bool
 }
