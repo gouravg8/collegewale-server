@@ -1,16 +1,31 @@
 package server
 
 import (
+	auth_handler "collegeWaleServer/internal/handlers/auth"
+	service "collegeWaleServer/internal/services/auth"
 	"net/http"
+	"os"
 
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"gorm.io/gorm"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
 	e := echo.New()
-	e.Use(middleware.Logger())
+	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
+
+	authGroup := e.Group("/auth")
+	apiV1Group := e.Group("/api/v1")
+	apiV1Group.Use(echojwt.WithConfig(echojwt.Config{
+		SigningKey: []byte(os.Getenv("JWT_SECRET_KEY")),
+	}))
+
+	authService := service.NewAuth(&gorm.DB{})
+
+	auth_handler.NewAuthHandler(authGroup, authService)
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{"https://*", "http://*"},

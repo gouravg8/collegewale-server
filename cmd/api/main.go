@@ -49,7 +49,7 @@ func main() {
 
 	err := server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
-		panic(fmt.Sprintf("http server error: %s", err))
+		panic(fmt.Sprintf("http server error: %s\n", err))
 	}
 
 	// Wait for the graceful shutdown to complete
