@@ -38,6 +38,10 @@ func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (models.College
 		return models.College{}, fmt.Errorf("Empty phone")
 	}
 
+	if !utils.IsPhoneValid(req.Phone) {
+		return models.College{}, fmt.Errorf("phone not valid")
+	}
+
 	if strings.TrimSpace(req.Code) == "" {
 		return models.College{}, fmt.Errorf("college code cannot be empty")
 	}
@@ -72,6 +76,9 @@ func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (models.College
 	err := s.DB.Create(&college).Error
 
 	if err != nil {
+		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "UNIQUE") {
+			return models.College{}, fmt.Errorf("College with this naem/email/code/phone already exists")
+		}
 		log.Error("Error creating college", err)
 		return models.College{}, err
 	}
