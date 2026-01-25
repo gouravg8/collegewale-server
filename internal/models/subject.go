@@ -9,4 +9,6 @@ type Subject struct {
 	Credits   int
 	CollegeID uint
 	College   College
+
+	Students []Student `gorm:"many2many:student_subjects"`
 }
