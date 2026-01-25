@@ -8,10 +8,10 @@ import (
 
 type College struct {
 	gorm.Model
-	Name       string           `gorm:"type:text"`
-	Code       string           `gorm:"not null"`
-	Phone      string           `gorm:"not null"`
-	Email      string           `gorm:"not null"`
+	Name       string           `gorm:"type:text;unique"`
+	Code       string           `gorm:"not null;unique"`
+	Phone      string           `gorm:"not null;unique"`
+	Email      string           `gorm:"not null;unique"`
 	CourseType enums.CourseType `gorm:"not null; default:'GNM'"`
 	Seats      uint             `gorm:"not null"`
 	Logo       string
