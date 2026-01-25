@@ -71,8 +71,6 @@ func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (models.College
 		Logo:       req.Logo,
 	}
 
-	// err := s.db.Create(&college).Error
-	// err := s.db.Create(&college).Error
 	err := s.DB.Create(&college).Error
 
 	if err != nil {
