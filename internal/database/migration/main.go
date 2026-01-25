@@ -2,12 +2,15 @@ package main
 
 import (
 	"collegeWaleServer/internal/database"
-	"collegeWaleServer/internal/models"
 	"log"
 )
 
 var modelsToMigrate = []any{
-	&models.College{},
+	// &models.College{},
+	// &models.Attendance{},
+	// &models.Student{},
+	// &models.Subject{},
+	// &models.User{},
 }
 
 func main() {
