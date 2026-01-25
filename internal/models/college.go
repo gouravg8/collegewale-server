@@ -16,4 +16,6 @@ type College struct {
 	Seats      uint             `gorm:"not null"`
 	Logo       string
 	IsActive   bool
+	
+	Subject []Subject 
 }
