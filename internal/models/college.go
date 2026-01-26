@@ -2,6 +2,7 @@ package models
 
 import (
 	"collegeWaleServer/internal/enums"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -15,7 +16,11 @@ type College struct {
 	CourseType enums.CourseType `gorm:"not null; default:'GNM'"`
 	Seats      uint             `gorm:"not null"`
 	Logo       string
-	IsActive   bool
-	
-	Subject []Subject 
+	Status     enums.CollegeType `gorm:"not null; defualt:'pending'"`
+
+	// invicte based login
+	InviteToken  string `gorm:"size:255;index"`
+	InviteExpiry time.Time
+
+	Subject []Subject
 }
