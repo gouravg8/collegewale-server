@@ -7,8 +7,10 @@ import (
 	auth_view "collegeWaleServer/internal/views/auth"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/log"
+	"github.com/google/uuid"
 
 	"gorm.io/gorm"
 )
@@ -61,14 +63,20 @@ func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (models.College
 		return models.College{}, fmt.Errorf("seats must be greater than zero")
 	}
 
+	inviteToken := uuid.NewString()
+	inviteTokenExpiryTime := time.Now().Add(24 * time.Hour)
+
 	college := models.College{
-		Name:       req.Name,
-		Code:       req.Code,
-		Phone:      req.Phone,
-		Email:      req.Email,
-		CourseType: req.CourseType,
-		Seats:      req.Seats,
-		Logo:       req.Logo,
+		Name:         req.Name,
+		Code:         req.Code,
+		Phone:        req.Phone,
+		Email:        req.Email,
+		CourseType:   req.CourseType,
+		Seats:        req.Seats,
+		InviteToken:  inviteToken,
+		InviteExpiry: inviteTokenExpiryTime,
+
+		Logo: req.Logo,
 	}
 
 	err := s.DB.Create(&college).Error
