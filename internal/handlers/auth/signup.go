@@ -33,11 +33,17 @@ func (h AuthHandler) DoSignup(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "can not map", Data: err})
 	}
 
-	_, err = h.authService.CollegeSignup(req)
+	var msg string
+	_, msg, err = h.authService.CollegeSignup(req)
 
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, views.Response{Message: err.Error()})
 	}
 	fmt.Println("hi from do signup handler")
-	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
+
+	if msg != "" {
+		return ctx.JSON(http.StatusOK, views.Response{Message: msg})
+	} else {
+		return ctx.JSON(http.StatusOK, views.Response{Message: "sucess"})
+	}
 }
