@@ -3,9 +3,12 @@ package service
 import (
 	"collegeWaleServer/internal/enums"
 	"collegeWaleServer/internal/models"
+	"collegeWaleServer/internal/services/email"
 	"collegeWaleServer/internal/utils"
 	auth_view "collegeWaleServer/internal/views/auth"
+	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -23,48 +26,42 @@ func NewAuthService(db *gorm.DB) *AuthService {
 	return &AuthService{DB: db}
 }
 
-func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (models.College, error) {
+func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (models.College, string, error) {
+	// --- Input Validation ---
 	if strings.TrimSpace(req.Name) == "" {
-		return models.College{}, fmt.Errorf("Empty name")
+		return models.College{}, "", fmt.Errorf("college name cannot be empty")
 	}
-
 	if strings.TrimSpace(req.Email) == "" {
-		return models.College{}, fmt.Errorf("Empty email")
+		return models.College{}, "", fmt.Errorf("email cannot be empty")
 	}
-
 	if !utils.IsEmailValid(req.Email) {
-		return models.College{}, fmt.Errorf("email not valid")
+		return models.College{}, "", fmt.Errorf("invalid email format")
 	}
-
 	if strings.TrimSpace(req.Phone) == "" {
-		return models.College{}, fmt.Errorf("Empty phone")
+		return models.College{}, "", fmt.Errorf("phone cannot be empty")
 	}
-
 	if !utils.IsPhoneValid(req.Phone) {
-		return models.College{}, fmt.Errorf("phone not valid")
+		return models.College{}, "", fmt.Errorf("invalid phone format")
 	}
-
 	if strings.TrimSpace(req.Code) == "" {
-		return models.College{}, fmt.Errorf("college code cannot be empty")
+		return models.College{}, "", fmt.Errorf("college code cannot be empty")
 	}
-
 	if string(req.CourseType) == "" {
-		return models.College{}, fmt.Errorf("college type cannot be empty")
+		return models.College{}, "", fmt.Errorf("course type cannot be empty")
 	}
-
 	switch req.CourseType {
 	case enums.GNM, enums.ANM, enums.BSCNursing:
 		// valid
 	default:
-		return models.College{}, fmt.Errorf("invalid course type: %s", req.CourseType)
+		return models.College{}, "", fmt.Errorf("invalid course type: %s", req.CourseType)
+	}
+	if req.Seats <= 0 {
+		return models.College{}, "", fmt.Errorf("seats must be greater than zero")
 	}
 
-	if req.Seats == 0 {
-		return models.College{}, fmt.Errorf("seats must be greater than zero")
-	}
-
+	// --- gen token ---
 	inviteToken := uuid.NewString()
-	inviteTokenExpiryTime := time.Now().Add(24 * time.Hour)
+	inviteTokenExpiry := time.Now().Add(24 * time.Hour)
 
 	college := models.College{
 		Name:         req.Name,
@@ -74,20 +71,53 @@ func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (models.College
 		CourseType:   req.CourseType,
 		Seats:        req.Seats,
 		InviteToken:  inviteToken,
-		InviteExpiry: inviteTokenExpiryTime,
-
-		Logo: req.Logo,
+		InviteExpiry: inviteTokenExpiry,
+		Logo:         req.Logo,
 	}
 
-	err := s.DB.Create(&college).Error
-
+	var existing models.College
+	err := s.DB.Where("code = ?", req.Code).First(&existing).Error
 	if err != nil {
-		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "UNIQUE") {
-			return models.College{}, fmt.Errorf("College with this naem/email/code/phone already exists")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// New college → create
+			if err := s.DB.Create(&college).Error; err != nil {
+				if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "UNIQUE") {
+					return models.College{}, "", fmt.Errorf("college with this name/email/code/phone already exists")
+				}
+				log.Error("Error creating college", err)
+				return models.College{}, "", err
+			}
+		} else {
+			return models.College{}, "", err
 		}
-		log.Error("Error creating college", err)
-		return models.College{}, err
+	} else {
+		// if clg exists → update token
+		if err := s.DB.Model(&models.College{}).
+			Where("code = ?", existing.Code).
+			Updates(map[string]any{
+				"invite_token":  inviteToken,
+				"invite_expiry": inviteTokenExpiry,
+			}).Error; err != nil {
+			return models.College{}, "", err
+		}
 	}
 
-	return college, nil
+	// --- send email ---
+	emailService := email.NewEmailService()
+	baseUrl := os.Getenv("APP_BASE_URL")
+	data := map[string]string{
+		"Name":             req.Name,
+		"VerificationLink": baseUrl + "/verification?token=" + inviteToken,
+	}
+
+	if err := emailService.SendTemplateEmail(
+		req.Email,
+		"Verify Your College Account",
+		"internal/services/email/templates/verification.html",
+		data,
+	); err != nil {
+		return college, "", err
+	}
+
+	return college, "Verification email has been sent successfully", nil
 }
