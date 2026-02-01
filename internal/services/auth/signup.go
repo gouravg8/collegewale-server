@@ -121,3 +121,33 @@ func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (models.College
 
 	return college, "Verification email has been sent successfully", nil
 }
+
+func (s *AuthService) GetCollegeByToken(token string) (models.College, error) {
+	if token == "" {
+		return models.College{}, fmt.Errorf("Token is required")
+	}
+
+	var alreadyCollegeByToken models.College
+	if err := s.DB.Where("token = ?", token).First(&alreadyCollegeByToken).Updates(map[string]any{
+		"invite_token":  "",
+		"invite_expiry": "",
+	}).Error; err != nil {
+		return models.College{}, err
+	}
+
+	return alreadyCollegeByToken, nil
+}
+
+func (s *AuthService) SetPassword(req auth_view.SetPassword) error {
+	// todo: perform the hasing password
+	var passwordHash string = ""
+
+	err := s.DB.Where("code = ?", req.CollegeID).Updates(map[string]any{
+		"password_hash": passwordHash,
+	})
+
+	if err != nil {
+		return err.Error
+	}
+	return nil
+}
