@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
 	"gorm.io/gorm"
@@ -150,4 +151,23 @@ func (s *AuthService) SetPassword(req auth_view.SetPassword) error {
 		return err.Error
 	}
 	return nil
+}
+
+func (s *AuthService) CollegeLogin(req auth_view.CollegeLogin) (*models.College, error) {
+	// todo: perform the hasing password
+	var college models.College
+
+	password_hash := "bb30dba5ee1496d0bd9c14f108b909452b7564efad83c9ea384dffd66ac32b40"
+
+	err := s.DB.Where("code = ?", req.Code).First(&college).Error
+	if err != nil {
+		return nil, err
+	}
+	password_hash = college.PasswordHash
+
+	// err := s.DB.Where("code = ?", req.CollegeID).Updates(map[string]any{
+	// 	"password_hash": passwordHash,
+	// })
+
+	return &college, nil
 }

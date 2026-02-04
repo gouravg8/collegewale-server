@@ -84,3 +84,16 @@ func (h AuthHandler) SetPassword(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
 
 }
+
+func (h AuthHandler) Login(ctx echo.Context) error {
+	var req auth_view.CollegeLogin
+	err := ctx.Bind(&req)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "can not map request", Data: err})
+	}
+	
+	if err := h.authService.CollegeLogin(req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, views.Response{Message: err.Error()})
+	}
+	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
+}
