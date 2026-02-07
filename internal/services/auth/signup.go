@@ -139,15 +139,17 @@ func (s *AuthService) GetCollegeByToken(token string) (models.College, error) {
 }
 
 func (s *AuthService) SetPassword(req auth_view.SetPassword) error {
-	// todo: perform the hasing password
-	var passwordHash string = ""
+	passwordHash, err := utils.HashPassword(req.Password)
+	if err != nil {
+		return err
+	}
 
-	err := s.DB.Where("code = ?", req.CollegeID).Updates(map[string]any{
+	err = s.DB.Where("code = ?", req.CollegeID).Updates(map[string]any{
 		"password_hash": passwordHash,
-	})
+	}).Error
 
 	if err != nil {
-		return err.Error
+		return err
 	}
 	return nil
 }
