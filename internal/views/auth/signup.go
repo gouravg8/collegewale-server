@@ -15,7 +15,8 @@ type CollegeSignup struct {
 }
 
 type SetPassword struct {
-	CollegeID       string `json:"college_id"`
+	Code            string `json:"code"`
+	Email           string `json:"email"`
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirm_password"`
 }

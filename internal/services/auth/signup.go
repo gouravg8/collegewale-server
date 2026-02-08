@@ -144,9 +144,15 @@ func (s *AuthService) SetPassword(req auth_view.SetPassword) error {
 		return err
 	}
 
-	err = s.DB.Where("code = ?", req.CollegeID).Updates(map[string]any{
-		"password_hash": passwordHash,
-	}).Error
+	if req.Code != "" {
+		err = s.DB.Where("code = ?", req.Code).Updates(map[string]any{
+			"password_hash": passwordHash,
+		}).Error
+	} else if req.Email != "" {
+		err = s.DB.Where("email = ?", req.Email).Updates(map[string]any{
+			"password_hash": passwordHash,
+		}).Error
+	}
 
 	if err != nil {
 		return err
@@ -161,9 +167,7 @@ func (s *AuthService) CollegeLogin(req auth_view.CollegeLogin) (*models.College,
 		if err := s.DB.Where("code = ?", req.Code).First(&college).Error; err != nil {
 			return &models.College{}, fmt.Errorf("Error %v", err.Error())
 		}
-	}
-
-	if req.Email != "" {
+	} else if req.Email != "" {
 		if err := s.DB.Where("email = ?", req.Email).First(&college).Error; err != nil {
 			return &models.College{}, fmt.Errorf("Error %v", err.Error())
 		}
