@@ -83,6 +83,14 @@ func (h AuthHandler) SetPassword(ctx echo.Context) error {
 			views.Response{Message: "can not map", Data: err})
 	}
 
+	if req.Email == "" && req.Code == "" {
+		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "Enter Email or Code"})
+	}
+
+	if req.Password == "" || req.ConfirmPassword == "" {
+		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "Password is required"})
+	}
+
 	if req.Password != req.ConfirmPassword {
 		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "Both Password must match"})
 	}
