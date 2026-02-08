@@ -153,3 +153,21 @@ func (s *AuthService) SetPassword(req auth_view.SetPassword) error {
 	}
 	return nil
 }
+
+func (s *AuthService) CollegeLogin(req auth_view.CollegeLogin) (*models.College, error) {
+	var college models.College
+
+	if req.Code != "" {
+		if err := s.DB.Where("code = ?", req.Code).First(&college).Error; err != nil {
+			return &models.College{}, fmt.Errorf("Error %v", err.Error())
+		}
+	}
+
+	if req.Email != "" {
+		if err := s.DB.Where("email = ?", req.Email).First(&college).Error; err != nil {
+			return &models.College{}, fmt.Errorf("Error %v", err.Error())
+		}
+	}
+
+	return &college, nil
+}

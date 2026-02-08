@@ -1,6 +1,8 @@
 package auth_view
 
-import "collegeWaleServer/internal/enums"
+import (
+	"collegeWaleServer/internal/enums"
+)
 
 type CollegeSignup struct {
 	Name       string           `json:"name"`
@@ -16,4 +18,17 @@ type SetPassword struct {
 	CollegeID       string `json:"college_id"`
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirm_password"`
+}
+
+type CollegeLogin struct {
+	Code     string `json:"code"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type CollegeLoginResponse struct {
+	Name  string `json:"name"`
+	Code  string `json:"code"`
+	Email string `json:"email"`
+	Token string `json:"token"`
 }
