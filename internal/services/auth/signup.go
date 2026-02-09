@@ -123,41 +123,43 @@ func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (models.College
 }
 
 func (s *AuthService) GetCollegeByToken(token string) (models.College, error) {
-	if token == "" {
-		return models.College{}, fmt.Errorf("Token is required")
+	var college models.College
+
+	if err := s.DB.Where("invite_token = ?", token).First(&college).Error; err != nil {
+		return models.College{}, err
 	}
 
-	var alreadyCollegeByToken models.College
-	if err := s.DB.Where("token = ?", token).First(&alreadyCollegeByToken).Updates(map[string]any{
-		"invite_token":  "",
-		"invite_expiry": "",
+	if college.InviteExpiry.Before(time.Now()) || college.InviteToken == "" {
+		return models.College{}, errors.New("invalid or expired token")
+	}
+
+	if err := s.DB.Model(&college).Updates(map[string]any{
+		"invite_token":  nil,
+		"invite_expiry": nil,
 	}).Error; err != nil {
 		return models.College{}, err
 	}
 
-	return alreadyCollegeByToken, nil
+	return college, nil
 }
 
-func (s *AuthService) SetPassword(req auth_view.SetPassword) error {
+func (s *AuthService) SetPassword(req auth_view.SetPassword) (models.College, error) {
+	var college models.College
 	passwordHash, err := utils.HashPassword(req.Password)
 	if err != nil {
-		return err
+		return models.College{}, err
 	}
 
 	if req.Code != "" {
-		err = s.DB.Where("code = ?", req.Code).Updates(map[string]any{
-			"password_hash": passwordHash,
-		}).Error
+		err = s.DB.Model(&college).Where("code = ?", req.Code).Update("password_hash", passwordHash).Error
 	} else if req.Email != "" {
-		err = s.DB.Where("email = ?", req.Email).Updates(map[string]any{
-			"password_hash": passwordHash,
-		}).Error
+		err = s.DB.Model(&college).Where("email = ?", req.Email).Update("password_hash", passwordHash).Error
 	}
 
 	if err != nil {
-		return err
+		return models.College{}, err
 	}
-	return nil
+	return college, nil
 }
 
 func (s *AuthService) CollegeLogin(req auth_view.CollegeLogin) (*models.College, error) {

@@ -31,7 +31,7 @@ func NewAuthHandler(group *echo.Group, authService *service.AuthService) *AuthHa
 
 	group.POST("/college-signup", h.DoSignup)
 	group.POST("/verification", h.Verification)
-	group.POST("/set-password", h.SetPassword)
+	group.POST("/college-set-password", h.SetPassword)
 	group.POST("/college-login", h.CollegeLogin)
 	return h
 }
@@ -66,7 +66,7 @@ func (h AuthHandler) Verification(ctx echo.Context) error {
 
 	college, err := h.authService.GetCollegeByToken(token)
 	if err != nil {
-		return ctx.JSON(http.StatusUnauthorized, views.Response{Message: "Invalid or expired token"})
+		return ctx.JSON(http.StatusUnauthorized, views.Response{Message: "Invalid or expired token", Data: err})
 	}
 
 	return ctx.JSON(http.StatusOK, views.Response{
@@ -95,10 +95,11 @@ func (h AuthHandler) SetPassword(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "Both Password must match"})
 	}
 
-	if err := h.authService.SetPassword(req); err != nil {
+	data, err := h.authService.SetPassword(req)
+	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, views.Response{Message: err.Error()})
 	}
-	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
+	return ctx.JSON(http.StatusOK, views.Response{Message: "success", Data: data})
 }
 
 func (h AuthHandler) CollegeLogin(c echo.Context) error {
@@ -122,16 +123,15 @@ func (h AuthHandler) CollegeLogin(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, views.Response{Message: err.Error()})
 	}
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, views.Response{
-			Data: auth_view.CollegeLoginResponse{
-				Name:  college.Name,
-				Code:  college.Code,
-				Email: college.Email,
-				Token: token,
-			},
-		})
-	}
+
+	return c.JSON(http.StatusInternalServerError, views.Response{
+		Data: auth_view.CollegeLoginResponse{
+			Name:  college.Name,
+			Code:  college.Code,
+			Email: college.Email,
+			Token: token,
+		},
+	})
 }
 
 func (h AuthHandler) generateToken(college *models.College) (string, error) {
