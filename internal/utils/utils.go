@@ -21,14 +21,7 @@ func IsPhoneValid(p string) bool {
 }
 
 func HashPassword(password string) (string, error) {
-
-	decoded, err := base64.StdEncoding.DecodeString(password)
-
-	if err != nil {
-		return "", err
-	}
-
-	bytes, err := bcrypt.GenerateFromPassword(decoded, 14)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {
 		log.Warn("error in generating password", err)
 		return "", err
