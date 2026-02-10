@@ -95,11 +95,11 @@ func (h AuthHandler) SetPassword(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "Both Password must match"})
 	}
 
-	data, err := h.authService.SetPassword(req)
+	err = h.authService.SetPassword(req)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, views.Response{Message: err.Error()})
 	}
-	return ctx.JSON(http.StatusOK, views.Response{Message: "success", Data: data})
+	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
 }
 
 func (h AuthHandler) CollegeLogin(c echo.Context) error {

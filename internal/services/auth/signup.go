@@ -143,11 +143,11 @@ func (s *AuthService) GetCollegeByToken(token string) (models.College, error) {
 	return college, nil
 }
 
-func (s *AuthService) SetPassword(req auth_view.SetPassword) (models.College, error) {
+func (s *AuthService) SetPassword(req auth_view.SetPassword) error {
 	var college models.College
 	passwordHash, err := utils.HashPassword(req.Password)
 	if err != nil {
-		return models.College{}, err
+		return err
 	}
 
 	if req.Code != "" {
@@ -157,9 +157,9 @@ func (s *AuthService) SetPassword(req auth_view.SetPassword) (models.College, er
 	}
 
 	if err != nil {
-		return models.College{}, err
+		return err
 	}
-	return college, nil
+	return nil
 }
 
 func (s *AuthService) CollegeLogin(req auth_view.CollegeLogin) (*models.College, error) {
