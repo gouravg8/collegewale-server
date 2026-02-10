@@ -1,0 +1,28 @@
+meta {
+  name: college-verification
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{authhost}}/college-signup
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "uk university 2",
+    "code": "112",
+    "phone": "1234567891",
+    "email": "faltuhunbro@gmail.com",
+    "course_type": "GNM",
+    "seats": 1,
+    "logo": ""
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
