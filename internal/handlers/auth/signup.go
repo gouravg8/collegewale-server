@@ -71,7 +71,7 @@ func (h AuthHandler) Verification(ctx echo.Context) error {
 
 	return ctx.JSON(http.StatusOK, views.Response{
 		Message: "Token verified, proceed to set password",
-		Data:    map[string]any{"college_id": college.ID},
+		Data:    map[string]any{"code": college.Code},
 	})
 }
 
