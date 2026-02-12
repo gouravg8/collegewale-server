@@ -118,13 +118,16 @@ func (h AuthHandler) CollegeLogin(c echo.Context) error {
 	}
 
 	college, err := h.authService.CollegeLogin(req)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, views.Response{Message: err.Error()})
+	}
 
 	token, err := h.generateToken(college)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, views.Response{Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusInternalServerError, views.Response{
+	return c.JSON(http.StatusOK, views.Response{
 		Data: auth_view.CollegeLoginResponse{
 			Name:  college.Name,
 			Code:  college.Code,

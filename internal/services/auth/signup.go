@@ -164,15 +164,21 @@ func (s *AuthService) SetPassword(req auth_view.SetPassword) error {
 
 func (s *AuthService) CollegeLogin(req auth_view.CollegeLogin) (*models.College, error) {
 	var college models.College
+	var err error
 
 	if req.Code != "" {
-		if err := s.DB.Where("code = ?", req.Code).First(&college).Error; err != nil {
-			return &models.College{}, fmt.Errorf("Error %v", err.Error())
-		}
+		err = s.DB.Where("code = ?", req.Code).First(&college).Error
 	} else if req.Email != "" {
-		if err := s.DB.Where("email = ?", req.Email).First(&college).Error; err != nil {
-			return &models.College{}, fmt.Errorf("Error %v", err.Error())
+		err = s.DB.Where("email = ?", req.Email).First(&college).Error
+	}
+
+	if err == nil {
+		if verifyErr := utils.VerifyPassword(college.PasswordHash, req.Password); verifyErr != nil {
+			return &models.College{}, fmt.Errorf("invalid credentials")
 		}
+	} else {
+		utils.VerifyPassword("$2a$10$dummyhashtoavoidtimingattack", req.Password)
+		return &models.College{}, fmt.Errorf("invalid credentials")
 	}
 
 	return &college, nil
