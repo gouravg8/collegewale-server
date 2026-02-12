@@ -16,7 +16,7 @@ type College struct {
 	CourseType   enums.CourseType `gorm:"not null; default:'GNM'"`
 	Seats        uint             `gorm:"not null"`
 	Logo         string
-	Status       enums.CollegeType `gorm:"not null; defualt:'pending'"`
+	Status       enums.CollegeType `gorm:"not null; default:'pending'"`
 	PasswordHash string
 
 	// invicte based login
