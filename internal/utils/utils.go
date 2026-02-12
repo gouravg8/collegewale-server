@@ -46,3 +46,7 @@ func CheckPasswordHash(password, hash string) bool {
 	err = bcrypt.CompareHashAndPassword([]byte(hash), decoded)
 	return err == nil
 }
+
+func VerifyPassword(hash, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+}
