@@ -1,6 +1,7 @@
 package auth_handler
 
 import (
+	"collegeWaleServer/errz"
 	"collegeWaleServer/internal/models"
 	service "collegeWaleServer/internal/services/auth"
 	"collegeWaleServer/internal/views"
@@ -29,10 +30,11 @@ func NewAuthHandler(group *echo.Group, authService *service.AuthService) *AuthHa
 		jwtKey:      os.Getenv("JWT_SECRET_KEY"),
 	}
 
-	group.POST("/college-signup", h.DoSignup)
+	group.POST("/college/signup", h.DoSignup)
 	group.POST("/verification", h.Verification)
 	group.POST("/set-password", h.SetPassword)
 	group.POST("/college-login", h.CollegeLogin)
+	group.POST("/login", h.SignIn)
 	return h
 }
 
@@ -152,4 +154,25 @@ func (h AuthHandler) generateToken(college *models.College) (string, error) {
 		return "", err
 	}
 	return t, nil
+}
+
+//func (h AuthHandler) CreateCollege(ctx echo.Context) error {
+//
+//}
+
+func (h AuthHandler) SignIn(ctx echo.Context) error {
+	var req views.Me
+	err := ctx.Bind(&req)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
+	}
+	if (req.Username == nil || *req.Username == "") && (req.Email == nil || *req.Email == "") && (req.Phone == nil || *req.Phone == "") {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
+	}
+	if req.Password == "" {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("password is required"))
+	}
+	
+	res, err := h.authService.SignIn(req)
+	return errz.HandleErrz(ctx, res, err)
 }

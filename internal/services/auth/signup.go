@@ -5,6 +5,7 @@ import (
 	"collegeWaleServer/internal/models"
 	"collegeWaleServer/internal/services/email"
 	"collegeWaleServer/internal/utils"
+	"collegeWaleServer/internal/views"
 	auth_view "collegeWaleServer/internal/views/auth"
 	"errors"
 	"fmt"
@@ -174,4 +175,8 @@ func (s *AuthService) CollegeLogin(req auth_view.CollegeLogin) (*models.College,
 	}
 
 	return &college, nil
+}
+
+func (s *AuthService) SignIn(req views.Me) (*views.Login, error) {
+
 }

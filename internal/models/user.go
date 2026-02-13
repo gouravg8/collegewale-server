@@ -1,11 +1,15 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model
 	Email        string `gorm:"uniqueIndex;not null"`
-	PasswordHash string `gorm:"not null"`
-	Role         string `gorm:"not null"` // "student", "college_admin", "admin"
+	Username     string `gorm:"uniqueIndex;not null"`
+	Phone        *string
+	PasswordHash string `gorm:"type:text;not null"`
+	Role         []Role `gorm:"many2many:user_roles;"`
 	CollegeID    *uint
 }
