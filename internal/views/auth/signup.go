@@ -11,3 +11,14 @@ type CollegeSignup struct {
 	Seats      uint             `json:"seats"`
 	Logo       string           `json:"logo"`
 }
+
+type SetPassword struct {
+	CollegeID       string `json:"college_id"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirm_password"`
+}
+
+type CollegeLogin struct {
+	Code     string `json:"code"`
+	Password string `json:"password"`
+}
