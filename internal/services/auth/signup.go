@@ -205,6 +205,6 @@ func (s *AuthService) SignIn(req views.MeLogin) (*views.Me, error) {
 	return res, nil
 }
 
-//func getExistingColleges(db *gorm.DB) (map[string]*model.College, error) {
+//func getExistingColleges(db *gorm.db) (map[string]*model.College, error) {
 //
 //}

@@ -12,12 +12,12 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	"collegeWaleServer/internal/database"
+	"collegeWaleServer/internal/db"
 )
 
 type Server struct {
 	e  *echo.Echo
-	db database.Service
+	db db.Service
 }
 
 func NewServer() *Server {
@@ -27,7 +27,7 @@ func NewServer() *Server {
 func (s *Server) Init() error {
 	e := echo.New()
 	s.e = e
-	s.db = *database.New()
+	s.db = *db.New()
 
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())

@@ -19,13 +19,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 	apiV1Group.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey: []byte(os.Getenv("JWT_SECRET_KEY")),
 	}))
+	apiV1Group.Use(handlers.AuthMiddleware)
 
 	/*-------------public group---------------------*/
 	publicGroup := s.e.Group("/public")
 
 	/*-------------Service Layer------------*/
-	authService := service.NewAuthService(s.db.DB)
-	registryService := service.NewRegistryService(s.db.DB)
+	authService := service.NewAuthService(s.db.GetDatabase())
+	registryService := service.NewRegistryService(s.db.GetDatabase())
 
 	/*-------------Handler Layer-------------*/
 	//##-with auth-##

@@ -10,7 +10,7 @@ type User struct {
 	Username     string `gorm:"uniqueIndex;not null"`
 	Phone        string
 	PasswordHash string `gorm:"type:text;not null"`
-	Role         []Role `gorm:"many2many:user_roles;"`
+	Roles        []Role `gorm:"many2many:user_roles;"`
 	CollegeID    *uint
 }
 

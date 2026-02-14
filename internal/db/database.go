@@ -1,4 +1,4 @@
-package database
+package db
 
 import (
 	"context"
@@ -16,22 +16,18 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-// DbService defines the interface for database operations
-type DbService interface {
-	Health() map[string]string
-	Close() error
-}
-
 type Service struct {
-	DB *gorm.DB
+	db *gorm.DB
 }
 
-var dbInstance *Service
+var DB *gorm.DB
 
-// New initializes a new database connection (singleton)
+var dbService *Service
+
+// New initializes a new db connection (singleton)
 func New() *Service {
-	if dbInstance != nil {
-		return dbInstance
+	if dbService != nil {
+		return dbService
 	}
 	var (
 		database = os.Getenv("DB_DATABASE")
@@ -51,13 +47,12 @@ func New() *Service {
 		log.Fatalf("Could not parse PORT environment variable :: %v", err)
 		return nil
 	} else {
-		var db *gorm.DB
-		db, err = openDb(database, username, password, host, portInt)
+		DB, err = openDb(database, username, password, host, portInt)
 		if err != nil {
-			log.Fatalf("Could not connect to database: %v", err)
+			log.Fatalf("Could not connect to db: %v", err)
 		}
-		dbInstance = &Service{DB: db}
-		return dbInstance
+		dbService = &Service{db: DB}
+		return dbService
 	}
 	return nil
 
@@ -77,26 +72,26 @@ func openDb(dbName, user, password, host string, dbPort int) (*gorm.DB, error) {
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
-		TranslateError: false, // Set to true if you want GORM to translate DB errors to standard errors
+		TranslateError: false, // Set to true if you want GORM to translate db errors to standard errors
 	})
 }
 
-// Health checks the health of the database connection
+// Health checks the health of the db connection
 func (s *Service) Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
 	stats := make(map[string]string)
 
-	// Get underlying *sql.DB
-	sqlDB, err := s.DB.DB()
+	// Get underlying *sql.db
+	sqlDB, err := s.db.DB()
 	if err != nil {
 		stats["status"] = "down"
-		stats["error"] = fmt.Sprintf("failed to get sql.DB: %v", err)
+		stats["error"] = fmt.Sprintf("failed to get sql.db: %v", err)
 		return stats
 	}
 
-	// Ping the database
+	// Ping the db
 	if err := sqlDB.PingContext(ctx); err != nil {
 		stats["status"] = "down"
 		stats["error"] = fmt.Sprintf("db down: %v", err)
@@ -120,7 +115,7 @@ func (s *Service) Health() map[string]string {
 
 	// Evaluate stats
 	if dbStats.OpenConnections > 40 {
-		stats["message"] = "The database is experiencing heavy load."
+		stats["message"] = "The db is experiencing heavy load."
 	}
 	if dbStats.WaitCount > 1000 {
 		stats["message"] = "High number of wait events, possible bottlenecks."
@@ -135,12 +130,16 @@ func (s *Service) Health() map[string]string {
 	return stats
 }
 
-// Close closes the database connection
+// Close closes the db connection
 func (s *Service) Close() error {
-	sqlDB, err := s.DB.DB()
+	sqlDB, err := s.db.DB()
 	if err != nil {
 		return err
 	}
-	log.Printf("Disconnected from database")
+	log.Printf("Disconnected from db")
 	return sqlDB.Close()
+}
+
+func (s *Service) GetDatabase() *gorm.DB {
+	return s.db
 }
