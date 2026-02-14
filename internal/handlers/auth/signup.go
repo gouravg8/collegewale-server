@@ -53,7 +53,7 @@ func (h AuthHandler) DoSignup(ctx echo.Context) error {
 	if msg != "" {
 		return ctx.JSON(http.StatusOK, views.Response{Message: msg})
 	} else {
-		return ctx.JSON(http.StatusOK, views.Response{Message: "sucess"})
+		return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
 	}
 }
 
