@@ -25,17 +25,19 @@ type DateRangeFilter struct {
 }
 
 type Response struct {
-	Status  int    `json:"status,omitempty"`
-	Message string `json:"message,omitempty"`
+	Status  int    `json:"status"`
+	Message string `json:"message"`
 	Data    any    `json:"data,omitempty"`
+	Error   string `json:"error,omitempty"`
 }
 
 type ListResponse struct {
-	TotalRecords int `json:"total_records"`
-	Data         any `json:"data,omitempty"`
-
-	FailedCount  int64 `json:"failed_count,omitempty"`
-	MessageCount int64 `json:"message_count,omitempty"`
+	Status       int    `json:"status"`
+	Message      string `json:"message"`
+	TotalRecords int    `json:"total_records"`
+	Data         any    `json:"data,omitempty"`
+	FailedCount  int64  `json:"failed_count,omitempty"`
+	MessageCount int64  `json:"message_count,omitempty"`
 }
 
 type CountResult struct {
