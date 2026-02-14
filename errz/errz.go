@@ -67,3 +67,31 @@ func HandleErrz[T any](ctx echo.Context, res T, err error) error {
 		return ctx.JSON(http.StatusInternalServerError, "Internal Server Error")
 	}
 }
+
+func HandleErrx(ctx echo.Context, err error) error {
+	var existsErr *AlreadyExists
+	var notFoundErr *NotFound
+	var authErr *Unauthorized
+	var badReqErr *BadRequest
+	var notAllowed *NotAllowed
+	switch {
+	case errors.As(err, &notAllowed):
+		return ctx.JSON(http.StatusForbidden, err.Error())
+
+	case errors.As(err, &existsErr):
+		return ctx.JSON(http.StatusConflict, err.Error())
+
+	case errors.As(err, &notFoundErr):
+		return ctx.JSON(http.StatusNotFound, err.Error())
+
+	case errors.As(err, &authErr):
+		return ctx.JSON(http.StatusUnauthorized, err.Error())
+
+	case errors.As(err, &badReqErr):
+		return ctx.JSON(http.StatusBadRequest, err.Error())
+
+	default:
+		log.Errorf("something went wrong :: %+v", err)
+		return ctx.JSON(http.StatusInternalServerError, "Internal Server Error")
+	}
+}

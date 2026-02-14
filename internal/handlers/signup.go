@@ -1,8 +1,9 @@
-package auth_handler
+package handlers
 
 import (
 	"collegeWaleServer/errz"
-	"collegeWaleServer/internal/models"
+	"collegeWaleServer/internal/enums/roles"
+	"collegeWaleServer/internal/model"
 	service "collegeWaleServer/internal/services/auth"
 	"collegeWaleServer/internal/views"
 	auth_view "collegeWaleServer/internal/views/auth"
@@ -31,6 +32,7 @@ func NewAuthHandler(group *echo.Group, authService *service.AuthService) *AuthHa
 	}
 
 	group.POST("/college/signup", h.DoSignup)
+	group.POST("/register/college", WithRole(h.CreateCollege, roles.Admin))
 	group.POST("/verification", h.Verification)
 	group.POST("/set-password", h.SetPassword)
 	group.POST("/college-login", h.CollegeLogin)
@@ -119,24 +121,24 @@ func (h AuthHandler) CollegeLogin(c echo.Context) error {
 	}
 
 	college, err := h.authService.CollegeLogin(req)
-
+	if err != nil {
+		return err
+	}
 	token, err := h.generateToken(college)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, views.Response{Message: err.Error()})
 	}
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, views.Response{
-			Data: auth_view.CollegeLoginResponse{
-				Name:  college.Name,
-				Code:  college.Code,
-				Email: college.Email,
-				Token: token,
-			},
-		})
-	}
+	return c.JSON(http.StatusOK, views.Response{
+		Data: auth_view.CollegeLoginResponse{
+			Name:  college.Name,
+			Code:  college.Code,
+			Email: college.Email,
+			Token: token,
+		},
+	})
 }
 
-func (h AuthHandler) generateToken(college *models.College) (string, error) {
+func (h AuthHandler) generateToken(college *model.College) (string, error) {
 	claims := &jwtCustomClaims{
 		Name: college.Name,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -156,10 +158,6 @@ func (h AuthHandler) generateToken(college *models.College) (string, error) {
 	return t, nil
 }
 
-//func (h AuthHandler) CreateCollege(ctx echo.Context) error {
-//
-//}
-
 func (h AuthHandler) SignIn(ctx echo.Context) error {
 	var req views.MeLogin
 	err := ctx.Bind(&req)
@@ -175,4 +173,15 @@ func (h AuthHandler) SignIn(ctx echo.Context) error {
 
 	res, err := h.authService.SignIn(req)
 	return errz.HandleErrz(ctx, res, err)
+}
+
+func (h AuthHandler) CreateCollege(ctx echo.Context) error {
+	var req views.CollegeSignup
+	if err := ctx.Bind(&req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
+	}
+	if err := h.authService.CollegeSignup2(req); err != nil {
+		return errz.HandleErrx(ctx, err)
+	}
+	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
 }

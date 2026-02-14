@@ -1,6 +1,8 @@
 package views
 
-import "collegeWaleServer/internal/enums"
+import (
+	"collegeWaleServer/internal/enums/roles"
+)
 
 type MeLogin struct {
 	Username *string `json:"username"`
@@ -12,6 +14,6 @@ type MeLogin struct {
 type Me struct {
 	Email     string        `json:"email"`
 	Phone     string        `json:"phone;omitempty"`
-	Role      []enums.Roles `json:"role"`
+	Role      []roles.Roles `json:"role"`
 	CollegeID uint          `json:"college_id;omitempty"`
 }

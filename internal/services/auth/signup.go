@@ -16,6 +16,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"gorm.io/gorm"
 )
@@ -208,4 +209,66 @@ func (s *AuthService) SignIn(req views.MeLogin) (*views.Me, error) {
 		res.CollegeID = *me.CollegeID
 	}
 	return res, nil
+}
+
+func (s *AuthService) CollegeSignup2(req views.CollegeSignup) error {
+	// --- Input Validation ---
+	if strings.TrimSpace(req.Name) == "" {
+		return errz.NewBadRequest("college name cannot be empty")
+	}
+	if strings.TrimSpace(req.Email) == "" {
+		return errz.NewBadRequest("email cannot be empty")
+	}
+	if !utils.IsEmailValid(req.Email) {
+		return errz.NewBadRequest("invalid email format")
+	}
+	if strings.TrimSpace(req.Phone) == "" {
+		return errz.NewBadRequest("phone cannot be empty")
+	}
+	if !utils.IsPhoneValid(req.Phone) {
+		return errz.NewBadRequest("invalid phone format")
+	}
+	if strings.TrimSpace(req.Code) == "" {
+		return errz.NewBadRequest("college code cannot be empty")
+	}
+	if string(req.CourseType) == "" {
+		return errz.NewBadRequest("course type cannot be empty")
+	}
+	if err := req.CourseType.IsValidCourseType(); err != nil {
+		return err
+	}
+	if req.Seats <= 0 {
+		return errz.NewBadRequest("seats must be greater than zero")
+	}
+
+	var existingCount int64
+	if err := s.DB.Model(&model.College{}).Where("code = ?", req.Code).Count(&existingCount).Error; err != nil {
+		return err
+	} else if existingCount > 0 {
+		return errz.NewBadRequest("college already exists")
+	}
+
+	clg := model.College{
+		Name:       req.Name,
+		Code:       req.Code,
+		Phone:      req.Phone,
+		Email:      req.Email,
+		CourseType: req.CourseType,
+		Seats:      req.Seats,
+		Logo:       req.Logo,
+	}
+
+	if err := s.DB.Model(&model.College{}).Create(&clg).Error; err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return errz.NewBadRequest(pgErr.Detail)
+		}
+		return err
+	}
+
+	return nil
+}
+
+func getExistingColleges(db *gorm.DB) (map[string]*model.College, error) {
+
 }

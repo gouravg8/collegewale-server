@@ -2,7 +2,7 @@ package server
 
 import (
 	"collegeWaleServer/internal/database"
-	auth_handler "collegeWaleServer/internal/handlers/auth"
+	auth_handler "collegeWaleServer/internal/handlers"
 	service "collegeWaleServer/internal/services/auth"
 	"net/http"
 	"os"

@@ -1,4 +1,4 @@
-package enums
+package roles
 
 type Roles string
 
