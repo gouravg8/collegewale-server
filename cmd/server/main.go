@@ -36,7 +36,7 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 		log.Printf("Server forced to shutdown with error: %v", err)
 	}
 
-	log.Println("Server exiting") //-1073741510
+	log.Println("Server exiting")
 }
 
 func main() {

@@ -1,7 +1,7 @@
 package server
 
 import (
-	auth_handler "collegeWaleServer/internal/handlers"
+	"collegeWaleServer/internal/handlers"
 	service "collegeWaleServer/internal/services/auth"
 	"net/http"
 	"os"
@@ -13,6 +13,7 @@ import (
 func (s *Server) RegisterRoutes() http.Handler {
 
 	/*--------prefix---------*/
+	apiGroup := s.e.Group("/api")
 	apiV1Group := s.e.Group("/api/v1")
 
 	apiV1Group.Use(echojwt.WithConfig(echojwt.Config{
@@ -24,13 +25,15 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	/*-------------Service Layer------------*/
 	authService := service.NewAuthService(s.db.DB)
+	registryService := service.NewRegistryService(s.db.DB)
 
 	/*-------------Handler Layer-------------*/
-	auth_handler.NewAuthHandler(apiV1Group, authService)
+	//##-with auth-##
+	handlers.NewRegistryHandler(apiV1Group, registryService)
+	//##-without auth-##
+	handlers.NewAuthHandler(apiGroup, authService)
 
-	publicGroup.GET("/health/db", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{"status": "OK"})
-	})
+	publicGroup.GET("/health/db", s.healthHandler)
 
 	return s.e
 }

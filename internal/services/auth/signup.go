@@ -15,17 +15,15 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgconn"
-
 	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	DB *gorm.DB
+	db *gorm.DB
 }
 
 func NewAuthService(db *gorm.DB) *AuthService {
-	return &AuthService{DB: db}
+	return &AuthService{db: db}
 }
 
 func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (model.College, string, error) {
@@ -75,11 +73,11 @@ func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (model.College,
 	}
 
 	var existing model.College
-	err := s.DB.Where("code = ?", req.Code).First(&existing).Error
+	err := s.db.Where("code = ?", req.Code).First(&existing).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// New college → create
-			if err := s.DB.Create(&college).Error; err != nil {
+			if err := s.db.Create(&college).Error; err != nil {
 				if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "UNIQUE") {
 					return model.College{}, "", fmt.Errorf("college with this name/email/code/phone already exists")
 				}
@@ -91,7 +89,7 @@ func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (model.College,
 		}
 	} else {
 		// if clg exists → update token
-		if err := s.DB.Model(&model.College{}).
+		if err := s.db.Model(&model.College{}).
 			Where("code = ?", existing.Code).
 			Updates(map[string]any{
 				"invite_token":  inviteToken,
@@ -127,7 +125,7 @@ func (s *AuthService) GetCollegeByToken(token string) (model.College, error) {
 	}
 
 	var alreadyCollegeByToken model.College
-	if err := s.DB.Where("token = ?", token).First(&alreadyCollegeByToken).Updates(map[string]any{
+	if err := s.db.Where("token = ?", token).First(&alreadyCollegeByToken).Updates(map[string]any{
 		"invite_token":  "",
 		"invite_expiry": "",
 	}).Error; err != nil {
@@ -144,11 +142,11 @@ func (s *AuthService) SetPassword(req auth_view.SetPassword) error {
 	}
 
 	if req.Code != "" {
-		err = s.DB.Where("code = ?", req.Code).Updates(map[string]any{
+		err = s.db.Where("code = ?", req.Code).Updates(map[string]any{
 			"password_hash": passwordHash,
 		}).Error
 	} else if req.Email != "" {
-		err = s.DB.Where("email = ?", req.Email).Updates(map[string]any{
+		err = s.db.Where("email = ?", req.Email).Updates(map[string]any{
 			"password_hash": passwordHash,
 		}).Error
 	}
@@ -163,11 +161,11 @@ func (s *AuthService) CollegeLogin(req auth_view.CollegeLogin) (*model.College, 
 	var college model.College
 
 	if req.Code != "" {
-		if err := s.DB.Where("code = ?", req.Code).First(&college).Error; err != nil {
+		if err := s.db.Where("code = ?", req.Code).First(&college).Error; err != nil {
 			return &model.College{}, fmt.Errorf("Error %v", err.Error())
 		}
 	} else if req.Email != "" {
-		if err := s.DB.Where("email = ?", req.Email).First(&college).Error; err != nil {
+		if err := s.db.Where("email = ?", req.Email).First(&college).Error; err != nil {
 			return &model.College{}, fmt.Errorf("Error %v", err.Error())
 		}
 	}
@@ -177,7 +175,7 @@ func (s *AuthService) CollegeLogin(req auth_view.CollegeLogin) (*model.College, 
 
 func (s *AuthService) SignIn(req views.MeLogin) (*views.Me, error) {
 	var me model.User
-	q := s.DB.Model(&model.User{})
+	q := s.db.Model(&model.User{})
 	if req.Username != nil && *req.Username != "" {
 		q.Where("username = ?", *req.Username)
 	} else if req.Email != nil && *req.Email != "" {
@@ -205,36 +203,6 @@ func (s *AuthService) SignIn(req views.MeLogin) (*views.Me, error) {
 		res.CollegeID = *me.CollegeID
 	}
 	return res, nil
-}
-
-func (s *AuthService) RegisterCollege(req views.College) error {
-	// --- Input Validation ---
-	var existingCount int64
-	if err := s.DB.Model(&model.College{}).Where("code = ?", req.Code).Count(&existingCount).Error; err != nil {
-		return err
-	} else if existingCount > 0 {
-		return errz.NewBadRequest("college already exists")
-	}
-
-	clg := model.College{
-		Name:       req.Name,
-		Code:       req.Code,
-		Phone:      req.Phone,
-		Email:      req.Email,
-		CourseType: req.CourseType,
-		Seats:      req.Seats,
-		Logo:       req.Logo,
-	}
-
-	if err := s.DB.Model(&model.College{}).Create(&clg).Error; err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return errz.NewBadRequest(pgErr.Detail)
-		}
-		return err
-	}
-
-	return nil
 }
 
 //func getExistingColleges(db *gorm.DB) (map[string]*model.College, error) {

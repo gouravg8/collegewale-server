@@ -31,8 +31,6 @@ func NewAuthHandler(group *echo.Group, authService *service.AuthService) *AuthHa
 	}
 
 	group.POST("/college/signup", h.DoSignup)
-	//group.POST("/register/college", WithRole(h.CreateCollege, roles.Admin))
-	group.POST("/register/college", h.RegisterCollege)
 	group.POST("/verification", h.Verification)
 	group.POST("/set-password", h.SetPassword)
 	group.POST("/college-login", h.CollegeLogin)
@@ -164,27 +162,13 @@ func (h AuthHandler) SignIn(ctx echo.Context) error {
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
 	}
-	if (req.Username == nil || *req.Username == "") && (req.Email == nil || *req.Email == "") && (req.Phone == nil || *req.Phone == "") {
-		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
-	}
 	if req.Password == "" {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("password is required"))
+	}
+	if (req.Username == nil || *req.Username == "") && (req.Email == nil || *req.Email == "") && (req.Phone == nil || *req.Phone == "") {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
 	}
 
 	res, err := h.authService.SignIn(req)
 	return errz.HandleErrz(ctx, res, err)
-}
-
-func (h AuthHandler) RegisterCollege(ctx echo.Context) error {
-	var req views.College
-	if err := ctx.Bind(&req); err != nil {
-		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
-	}
-	if err := req.IsValidRequest(); err != nil {
-		return err
-	}
-	if err := h.authService.RegisterCollege(req); err != nil {
-		return errz.HandleErrx(ctx, err)
-	}
-	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
 }
