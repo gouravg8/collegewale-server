@@ -13,7 +13,13 @@ import (
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
 	// Create context that listens for the interrupt signal from the OS.
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer func() {
+		done <- true
+	}()
+	if apiServer == nil {
+		return
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	defer stop()
 
 	// Listen for the interrupt signal.
@@ -30,27 +36,24 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 		log.Printf("Server forced to shutdown with error: %v", err)
 	}
 
-	log.Println("Server exiting")
-
-	// Notify the main goroutine that the shutdown is complete
-	done <- true
+	log.Println("Server exiting") //-1073741510
 }
 
 func main() {
 
-	srv := server.NewServer()
-
-	// Create a done channel to signal when the shutdown is complete
-	//done := make(chan bool, 1)
-	if err := srv.Init(); err != nil {
+	s := server.NewServer()
+	if err := s.Init(); err != nil {
 		log.Fatal(err)
 		return
 	}
+	mServer := s.GetServer()
+	// Create a done channel to signal when the shutdown is complete
+	done := make(chan bool, 1)
 	// Run graceful shutdown in a separate goroutine
-	//go gracefulShutdown(, done)
+	go gracefulShutdown(mServer, done)
 
-	srv.Run()
+	s.Run()
 	// Wait for the graceful shutdown to complete
-	//<-done
-	//log.Println("Graceful shutdown complete.")
+	<-done
+	log.Println("Graceful shutdown complete.")
 }

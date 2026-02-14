@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -52,7 +53,18 @@ func (s *Server) Run() {
 	}
 
 	log.Printf("Starting server on port %s", port)
-	s.e.Logger.Fatal(s.e.Start(fmt.Sprintf(":%s", port)))
+	err := s.e.Start(fmt.Sprintf(":%s", port))
+	if !errors.Is(err, http.ErrServerClosed) && err != nil {
+		log.Fatalf("Shutting down the server due to error: %v", err)
+	}
+	log.Println("Server connection pool closed.")
+}
+
+func (s *Server) GetServer() *http.Server {
+	if s.e != nil {
+		return s.e.Server
+	}
+	return nil
 }
 
 func (s *Server) dbHealth(c echo.Context) error {
