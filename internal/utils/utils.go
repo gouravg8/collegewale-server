@@ -36,15 +36,8 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), nil
 }
 
-func CheckPasswordHash(password, hash string) bool {
+func ComparePassword(password, hash string) bool {
 	decoded, err := base64.StdEncoding.DecodeString(password)
-	if err != nil {
-		decoded = []byte("justapass")
-	}
-
-	if hash == "" {
-		hash = "$2a$12$WQ/Li.jWLQ74PjWQEm16jOBCQvR80ItyEiBnAtVtrXYIfEYkBO8HG"
-	}
 
 	if err != nil {
 		return false

@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	"collegeWaleServer/internal/enums"

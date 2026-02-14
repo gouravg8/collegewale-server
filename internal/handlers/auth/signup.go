@@ -161,7 +161,7 @@ func (h AuthHandler) generateToken(college *models.College) (string, error) {
 //}
 
 func (h AuthHandler) SignIn(ctx echo.Context) error {
-	var req views.Me
+	var req views.MeLogin
 	err := ctx.Bind(&req)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
@@ -172,7 +172,7 @@ func (h AuthHandler) SignIn(ctx echo.Context) error {
 	if req.Password == "" {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("password is required"))
 	}
-	
+
 	res, err := h.authService.SignIn(req)
 	return errz.HandleErrz(ctx, res, err)
 }
