@@ -8,9 +8,9 @@ import (
 type CourseType string
 
 const (
-	GNM        CourseType = "GNM"
-	ANM        CourseType = "ANM"
-	BSCNursing CourseType = "BSc Nursing"
+	GNM        CourseType = "gnm"
+	ANM        CourseType = "anm"
+	BSCNursing CourseType = "bsc_nursing"
 )
 
 func (c CourseType) IsValidCourseType() error {

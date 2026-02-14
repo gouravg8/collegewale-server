@@ -2,7 +2,6 @@ package service
 
 import (
 	"collegeWaleServer/errz"
-	"collegeWaleServer/internal/enums"
 	"collegeWaleServer/internal/model"
 	"collegeWaleServer/internal/services/email"
 	"collegeWaleServer/internal/utils"
@@ -52,11 +51,8 @@ func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (model.College,
 	if string(req.CourseType) == "" {
 		return model.College{}, "", fmt.Errorf("course type cannot be empty")
 	}
-	switch req.CourseType {
-	case enums.GNM, enums.ANM, enums.BSCNursing:
-		// valid
-	default:
-		return model.College{}, "", fmt.Errorf("invalid course type: %s", req.CourseType)
+	if err := req.CourseType.IsValidCourseType(); err != nil {
+		return model.College{}, "", err
 	}
 	if req.Seats <= 0 {
 		return model.College{}, "", fmt.Errorf("seats must be greater than zero")
@@ -211,36 +207,8 @@ func (s *AuthService) SignIn(req views.MeLogin) (*views.Me, error) {
 	return res, nil
 }
 
-func (s *AuthService) CollegeSignup2(req views.CollegeSignup) error {
+func (s *AuthService) RegisterCollege(req views.College) error {
 	// --- Input Validation ---
-	if strings.TrimSpace(req.Name) == "" {
-		return errz.NewBadRequest("college name cannot be empty")
-	}
-	if strings.TrimSpace(req.Email) == "" {
-		return errz.NewBadRequest("email cannot be empty")
-	}
-	if !utils.IsEmailValid(req.Email) {
-		return errz.NewBadRequest("invalid email format")
-	}
-	if strings.TrimSpace(req.Phone) == "" {
-		return errz.NewBadRequest("phone cannot be empty")
-	}
-	if !utils.IsPhoneValid(req.Phone) {
-		return errz.NewBadRequest("invalid phone format")
-	}
-	if strings.TrimSpace(req.Code) == "" {
-		return errz.NewBadRequest("college code cannot be empty")
-	}
-	if string(req.CourseType) == "" {
-		return errz.NewBadRequest("course type cannot be empty")
-	}
-	if err := req.CourseType.IsValidCourseType(); err != nil {
-		return err
-	}
-	if req.Seats <= 0 {
-		return errz.NewBadRequest("seats must be greater than zero")
-	}
-
 	var existingCount int64
 	if err := s.DB.Model(&model.College{}).Where("code = ?", req.Code).Count(&existingCount).Error; err != nil {
 		return err
@@ -269,6 +237,6 @@ func (s *AuthService) CollegeSignup2(req views.CollegeSignup) error {
 	return nil
 }
 
-func getExistingColleges(db *gorm.DB) (map[string]*model.College, error) {
-
-}
+//func getExistingColleges(db *gorm.DB) (map[string]*model.College, error) {
+//
+//}

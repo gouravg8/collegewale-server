@@ -14,7 +14,7 @@ type College struct {
 	Code         string             `gorm:"not null;unique"`
 	Phone        string             `gorm:"not null;unique"`
 	Email        string             `gorm:"not null;unique"`
-	CourseType   college.CourseType `gorm:"not null; default:'GNM'"`
+	CourseType   college.CourseType `gorm:"not null; default:'gnm'"`
 	Seats        uint               `gorm:"not null"`
 	Logo         string
 	Status       enums.CollegeType `gorm:"not null; defualt:'pending'"`

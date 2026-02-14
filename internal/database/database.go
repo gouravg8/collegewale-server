@@ -12,6 +12,8 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 )
 
 // DbService defines the interface for database operations
@@ -24,34 +26,59 @@ type Service struct {
 	DB *gorm.DB
 }
 
-var (
-	database   = os.Getenv("DB_DATABASE")
-	password   = os.Getenv("DB_PASSWORD")
-	username   = os.Getenv("DB_USERNAME")
-	port       = os.Getenv("DB_PORT")
-	host       = os.Getenv("DB_HOST")
-	schema     = os.Getenv("DB_SCHEMA")
-	dbInstance *Service
-)
+var dbInstance *Service
 
 // New initializes a new database connection (singleton)
 func New() *Service {
 	if dbInstance != nil {
 		return dbInstance
 	}
-
-	connStr := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable search_path=%s",
-		host, username, password, database, port, schema,
+	var (
+		database = os.Getenv("DB_DATABASE")
+		password = os.Getenv("DB_PASSWORD")
+		username = os.Getenv("DB_USERNAME")
+		port     = os.Getenv("DB_PORT")
+		host     = os.Getenv("DB_HOST")
 	)
-
-	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
-	if err != nil {
-		log.Fatal("failed to connect to database:", err)
+	if host == "" {
+		host = "localhost"
+	}
+	if port == "" {
+		port = "5432"
 	}
 
-	dbInstance = &Service{DB: db}
-	return dbInstance
+	if portInt, err := strconv.Atoi(port); err != nil {
+		log.Fatalf("Could not parse PORT environment variable :: %v", err)
+		return nil
+	} else {
+		var db *gorm.DB
+		db, err = openDb(database, username, password, host, portInt)
+		if err != nil {
+			log.Fatalf("Could not connect to database: %v", err)
+		}
+		dbInstance = &Service{DB: db}
+		return dbInstance
+	}
+	return nil
+
+}
+
+func openDb(dbName, user, password, host string, dbPort int) (*gorm.DB, error) {
+	connStr := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable",
+		host, user, password, dbName, dbPort,
+	)
+
+	return gorm.Open(postgres.New(postgres.Config{
+		DSN:                  connStr,
+		PreferSimpleProtocol: true,
+	}), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true,
+		},
+		TranslateError: false, // Set to true if you want GORM to translate DB errors to standard errors
+	})
 }
 
 // Health checks the health of the database connection
@@ -114,6 +141,6 @@ func (s *Service) Close() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Disconnected from database: %s", database)
+	log.Printf("Disconnected from database")
 	return sqlDB.Close()
 }
