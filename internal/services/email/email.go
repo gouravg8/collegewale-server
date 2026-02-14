@@ -33,7 +33,7 @@ func (es *EmailService) SendTemplateEmail(to, subject, templatePath string, data
 	// Execute template with dynamic data
 	var body bytes.Buffer
 	if err := tmpl.Execute(&body, data); err != nil {
-		return nil
+		return err
 	}
 
 	// Prepare email
