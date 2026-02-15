@@ -34,7 +34,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	//##-without auth-##
 	handlers.NewAuthHandler(apiGroup, authService)
 
-	publicGroup.GET("/health/db", s.healthHandler)
+	publicGroup.GET("/health", s.healthHandler)
 
 	return s.e
 }

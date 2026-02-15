@@ -177,15 +177,15 @@ func (s *AuthService) SignIn(req views.MeLogin) (*views.Me, error) {
 	var me model.User
 	q := s.db.Model(&model.User{})
 	if req.Username != nil && *req.Username != "" {
-		q.Where("username = ?", *req.Username)
+		q = q.Where("username = ?", *req.Username)
 	} else if req.Email != nil && *req.Email != "" {
-		q.Where("email = ?", req.Email)
+		q = q.Where("email = ?", req.Email)
 	} else if req.Phone != nil && *req.Phone != "" {
-		q.Where("phone = ?", *req.Phone)
+		q = q.Where("phone = ?", *req.Phone)
 	} else {
 		return nil, errz.NewBadRequest("Please provide a valid Username, Email or Phone.")
 	}
-	if err := q.Preload("Role").First(&me).Error; err != nil {
+	if err := q.Preload("Roles").First(&me).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errz.NewNotFound("User not found")
 		}
