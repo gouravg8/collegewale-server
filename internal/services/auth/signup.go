@@ -197,14 +197,10 @@ func (s *AuthService) SignIn(req views.MeLogin) (*views.Me, error) {
 	}
 	res := &views.Me{
 		Email: me.Email,
-		Phone: me.Phone,
+		Phone: me.Phone, //TODO generate jwt
 	}
 	if me.CollegeID != nil {
 		res.CollegeID = *me.CollegeID
 	}
 	return res, nil
 }
-
-//func getExistingColleges(db *gorm.db) (map[string]*model.College, error) {
-//
-//}
