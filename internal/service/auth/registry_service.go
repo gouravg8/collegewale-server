@@ -54,7 +54,6 @@ func (s RegistryService) RegisterCollege(req views.College, user *model.User) er
 		}
 		return err
 	}
-
 	return nil
 }
 
