@@ -9,33 +9,39 @@ import (
 )
 
 type BadRequest struct {
-	msg string
+	Message string `json:"message"`
 }
 
-func NewBadRequest(msg string) *BadRequest { return &BadRequest{msg: msg} }
-func (e *BadRequest) Error() string        { return e.msg }
+func NewBadRequest(msg string) *BadRequest { return &BadRequest{msg} }
+func (e *BadRequest) Error() string        { return e.Message }
 
 type Unauthorized struct {
-	msg string
+	Message string `json:"message"`
 }
 
-func NewUnauthorized(msg string) *Unauthorized { return &Unauthorized{msg: msg} }
-func (e *Unauthorized) Error() string          { return e.msg }
+func NewUnauthorized(msg string) *Unauthorized { return &Unauthorized{msg} }
+func (e *Unauthorized) Error() string          { return e.Message }
 
-type NotFound struct{ msg string }
+type NotFound struct {
+	Message string `json:"message"`
+}
 
-func NewNotFound(msg string) *NotFound { return &NotFound{msg: msg} }
-func (e *NotFound) Error() string      { return e.msg }
+func NewNotFound(msg string) *NotFound { return &NotFound{msg} }
+func (e *NotFound) Error() string      { return e.Message }
 
-type NotAllowed struct{ msg string }
+type NotAllowed struct {
+	Message string `json:"message"`
+}
 
-func NewNotAllowed(msg string) *NotAllowed { return &NotAllowed{msg: msg} }
-func (e *NotAllowed) Error() string        { return e.msg }
+func NewNotAllowed(msg string) *NotAllowed { return &NotAllowed{msg} }
+func (e *NotAllowed) Error() string        { return e.Message }
 
-type AlreadyExists struct{ msg string }
+type AlreadyExists struct {
+	Message string `json:"message"`
+}
 
-func NewAlreadyExists(msg string) *AlreadyExists { return &AlreadyExists{msg: msg} }
-func (e *AlreadyExists) Error() string           { return e.msg }
+func NewAlreadyExists(msg string) *AlreadyExists { return &AlreadyExists{msg} }
+func (e *AlreadyExists) Error() string           { return e.Message }
 
 func HandleErrz[T any](ctx echo.Context, res T, err error) error {
 	if err == nil {
@@ -69,6 +75,9 @@ func HandleErrz[T any](ctx echo.Context, res T, err error) error {
 }
 
 func HandleErrx(ctx echo.Context, err error) error {
+	if err == nil {
+		return ctx.JSON(http.StatusOK, nil)
+	}
 	var existsErr *AlreadyExists
 	var notFoundErr *NotFound
 	var authErr *Unauthorized

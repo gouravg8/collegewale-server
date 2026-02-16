@@ -2,7 +2,8 @@ package handlers
 
 import (
 	"collegeWaleServer/errz"
-	service "collegeWaleServer/internal/services/auth"
+	"collegeWaleServer/internal/enums/roles"
+	service "collegeWaleServer/internal/service/auth"
 	"collegeWaleServer/internal/views"
 	"net/http"
 
@@ -17,8 +18,8 @@ func NewRegistryHandler(group *echo.Group, registryService *service.RegistryServ
 	h := &Registry{
 		s: registryService,
 	}
-	//group.POST("/register/college", WithRole(h.RegisterCollege, roles.Admin))
-	group.POST("/register/college", h.RegisterCollege)
+	group.POST("/register/college", WithRole(h.RegisterCollege, roles.Admin))
+	group.POST("/register/student", h.RegisterStudent)
 	return h
 }
 
@@ -34,4 +35,24 @@ func (h Registry) RegisterCollege(ctx echo.Context) error {
 		return errz.HandleErrx(ctx, err)
 	}
 	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
+}
+
+func (h Registry) RegisterStudent(ctx echo.Context) error { //TODO it will need either admin or college role
+	var req views.MeLogin //TODO temp make seperate user creation struct
+	err := ctx.Bind(&req)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
+	}
+	if req.Password == "" {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("password is required"))
+	}
+	if req.Username == nil || *req.Username == "" {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("username is required"))
+	}
+	if req.Email == nil || *req.Email == "" {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("email is required"))
+	}
+
+	err = h.s.RegisterStudent(req)
+	return errz.HandleErrx(ctx, err)
 }

@@ -16,7 +16,7 @@ var modelsToMigrate = []any{
 
 func main() {
 	dbService := db.New()
-	err := dbService.db.AutoMigrate(modelsToMigrate...)
+	err := dbService.GetDatabase().AutoMigrate(modelsToMigrate...)
 
 	if err != nil {
 		log.Fatalf("failed to migrate db %v", err)

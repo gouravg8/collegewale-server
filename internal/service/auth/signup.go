@@ -2,8 +2,9 @@ package service
 
 import (
 	"collegeWaleServer/errz"
+	"collegeWaleServer/internal/enums/roles"
 	"collegeWaleServer/internal/model"
-	"collegeWaleServer/internal/services/email"
+	"collegeWaleServer/internal/service/email"
 	"collegeWaleServer/internal/utils"
 	"collegeWaleServer/internal/views"
 	auth_view "collegeWaleServer/internal/views/auth"
@@ -14,19 +15,21 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	db *gorm.DB
+	db        *gorm.DB
+	jwtSecret string
 }
 
 func NewAuthService(db *gorm.DB) *AuthService {
 	return &AuthService{db: db}
 }
 
-func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (model.College, string, error) {
+func (s AuthService) CollegeSignup(req auth_view.CollegeSignup) (model.College, string, error) {
 	// --- Input Validation ---
 	if strings.TrimSpace(req.Name) == "" {
 		return model.College{}, "", fmt.Errorf("college name cannot be empty")
@@ -110,7 +113,7 @@ func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (model.College,
 	if err := emailService.SendTemplateEmail(
 		req.Email,
 		"Verify Your College Account",
-		"internal/services/email/templates/verification.html",
+		"internal/service/email/templates/verification.html",
 		data,
 	); err != nil {
 		return college, "", err
@@ -119,7 +122,7 @@ func (s *AuthService) CollegeSignup(req auth_view.CollegeSignup) (model.College,
 	return college, "Verification email has been sent successfully", nil
 }
 
-func (s *AuthService) GetCollegeByToken(token string) (model.College, error) {
+func (s AuthService) GetCollegeByToken(token string) (model.College, error) {
 	if token == "" {
 		return model.College{}, fmt.Errorf("Token is required")
 	}
@@ -135,7 +138,7 @@ func (s *AuthService) GetCollegeByToken(token string) (model.College, error) {
 	return alreadyCollegeByToken, nil
 }
 
-func (s *AuthService) SetPassword(req auth_view.SetPassword) error {
+func (s AuthService) SetPassword(req auth_view.SetPassword) error {
 	passwordHash, err := utils.HashPassword(req.Password)
 	if err != nil {
 		return err
@@ -157,7 +160,7 @@ func (s *AuthService) SetPassword(req auth_view.SetPassword) error {
 	return nil
 }
 
-func (s *AuthService) CollegeLogin(req auth_view.CollegeLogin) (*model.College, error) {
+func (s AuthService) CollegeLogin(req auth_view.CollegeLogin) (*model.College, error) {
 	var college model.College
 
 	if req.Code != "" {
@@ -173,7 +176,7 @@ func (s *AuthService) CollegeLogin(req auth_view.CollegeLogin) (*model.College, 
 	return &college, nil
 }
 
-func (s *AuthService) SignIn(req views.MeLogin) (*views.Me, error) {
+func (s AuthService) SignIn(req views.MeLogin, key string) (*views.MeResponse, error) {
 	var me model.User
 	q := s.db.Model(&model.User{})
 	if req.Username != nil && *req.Username != "" {
@@ -193,14 +196,42 @@ func (s *AuthService) SignIn(req views.MeLogin) (*views.Me, error) {
 	}
 	if !utils.ComparePassword(req.Password, me.PasswordHash) {
 		return nil, errz.NewBadRequest("Incorrect Password.")
-
 	}
-	res := &views.Me{
+	myRoles := make([]roles.Roles, 0)
+	for _, r := range me.Roles {
+		myRoles = append(myRoles, r.Name)
+	}
+	tkn, err := GenerateToken(me.Username, key)
+	if err != nil {
+		log.Fatalf("error generating token :: %+v", err)
+		return nil, errz.NewBadRequest("Error generating auth token")
+	}
+	res := &views.MeResponse{
 		Email: me.Email,
-		Phone: me.Phone, //TODO generate jwt
+		Roles: myRoles,
+		Token: tkn,
 	}
 	if me.CollegeID != nil {
 		res.CollegeID = *me.CollegeID
 	}
+	if me.Phone != nil {
+		res.Phone = *me.Phone
+	}
 	return res, nil
+}
+
+func GenerateToken(username string, secret_key string) (string, error) {
+	claims := jwt.MapClaims{
+		"sub": username,
+		"iat": time.Now().Unix(), //no expiration for now
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString([]byte(secret_key))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }

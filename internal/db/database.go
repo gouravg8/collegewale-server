@@ -54,8 +54,6 @@ func New() *Service {
 		dbService = &Service{db: DB}
 		return dbService
 	}
-	return nil
-
 }
 
 func openDb(dbName, user, password, host string, dbPort int) (*gorm.DB, error) {

@@ -2,7 +2,10 @@ package service
 
 import (
 	"collegeWaleServer/errz"
+	"collegeWaleServer/internal/db"
+	"collegeWaleServer/internal/enums/roles"
 	"collegeWaleServer/internal/model"
+	"collegeWaleServer/internal/utils"
 	"collegeWaleServer/internal/views"
 	"errors"
 
@@ -18,7 +21,7 @@ func NewRegistryService(db *gorm.DB) *RegistryService {
 	return &RegistryService{db}
 }
 
-func (s *RegistryService) RegisterCollege(req views.College) error {
+func (s RegistryService) RegisterCollege(req views.College) error {
 	// --- Input Validation ---
 	var existingCount int64
 	if err := s.db.Model(&model.College{}).Where("code = ?", req.Code).Count(&existingCount).Error; err != nil {
@@ -45,5 +48,33 @@ func (s *RegistryService) RegisterCollege(req views.College) error {
 		return err
 	}
 
+	return nil
+}
+
+func (s RegistryService) RegisterStudent(req views.MeLogin) error {
+	if req.Phone != nil && len(*req.Phone) == 10 {
+		return errz.NewBadRequest("Please provide a valid Phone Number")
+	}
+	passwordHash, err := utils.HashPassword(req.Password)
+	if err != nil {
+		return err
+	}
+	var role model.Role
+	err = s.db.Model(&model.Role{}).Where("name = ?", roles.Student).First(&role).Error
+	if err != nil {
+		return err
+	}
+
+	var me = model.User{
+		Email:        *req.Email,
+		Username:     *req.Username,
+		Phone:        req.Phone,
+		PasswordHash: passwordHash,
+		Roles:        []model.Role{role},
+	}
+	err = db.DB.Model(&model.User{}).Create(&me).Error
+	if err != nil {
+		return err
+	}
 	return nil
 }

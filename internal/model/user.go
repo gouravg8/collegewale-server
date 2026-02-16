@@ -8,7 +8,7 @@ type User struct {
 	gorm.Model
 	Email        string `gorm:"uniqueIndex;not null"`
 	Username     string `gorm:"uniqueIndex;not null"`
-	Phone        string
+	Phone        *string
 	PasswordHash string `gorm:"type:text;not null"`
 	Roles        []Role `gorm:"many2many:user_roles;"`
 	CollegeID    *uint

@@ -3,7 +3,7 @@ package handlers
 import (
 	"collegeWaleServer/errz"
 	"collegeWaleServer/internal/model"
-	service "collegeWaleServer/internal/services/auth"
+	service "collegeWaleServer/internal/service/auth"
 	"collegeWaleServer/internal/views"
 	auth_view "collegeWaleServer/internal/views/auth"
 	"net/http"
@@ -15,8 +15,8 @@ import (
 )
 
 type AuthHandler struct {
-	jwtKey      string
-	authService *service.AuthService
+	jwtKey string
+	as     *service.AuthService
 }
 
 type jwtCustomClaims struct {
@@ -26,8 +26,8 @@ type jwtCustomClaims struct {
 
 func NewAuthHandler(group *echo.Group, authService *service.AuthService) *AuthHandler {
 	h := &AuthHandler{
-		authService: authService,
-		jwtKey:      os.Getenv("JWT_SECRET_KEY"),
+		as:     authService,
+		jwtKey: os.Getenv("JWT_SECRET_KEY"),
 	}
 
 	group.POST("/college/signup", h.DoSignup)
@@ -35,6 +35,7 @@ func NewAuthHandler(group *echo.Group, authService *service.AuthService) *AuthHa
 	group.POST("/set-password", h.SetPassword)
 	group.POST("/college-login", h.CollegeLogin)
 	group.POST("/login", h.SignIn)
+
 	return h
 }
 
@@ -46,7 +47,7 @@ func (h AuthHandler) DoSignup(ctx echo.Context) error {
 	}
 
 	var msg string
-	_, msg, err = h.authService.CollegeSignup(req)
+	_, msg, err = h.as.CollegeSignup(req)
 
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, views.Response{Message: err.Error()})
@@ -66,14 +67,14 @@ func (h AuthHandler) Verification(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "token is required"})
 	}
 
-	college, err := h.authService.GetCollegeByToken(token)
+	college, err := h.as.GetCollegeByToken(token)
 	if err != nil {
 		return ctx.JSON(http.StatusUnauthorized, views.Response{Message: "Invalid or expired token"})
 	}
 
 	return ctx.JSON(http.StatusOK, views.Response{
 		Message: "Token verified, proceed to set password",
-		Data:    map[string]any{"college_id": college.ID},
+		Data:    map[string]any{"college_id": college.Code},
 	})
 }
 
@@ -97,7 +98,7 @@ func (h AuthHandler) SetPassword(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "Both Password must match"})
 	}
 
-	if err := h.authService.SetPassword(req); err != nil {
+	if err := h.as.SetPassword(req); err != nil {
 		return ctx.JSON(http.StatusBadRequest, views.Response{Message: err.Error()})
 	}
 	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
@@ -118,7 +119,7 @@ func (h AuthHandler) CollegeLogin(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, views.Response{Message: "Password is required"})
 	}
 
-	college, err := h.authService.CollegeLogin(req)
+	college, err := h.as.CollegeLogin(req)
 	if err != nil {
 		return err
 	}
@@ -169,6 +170,6 @@ func (h AuthHandler) SignIn(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
 	}
 
-	res, err := h.authService.SignIn(req)
+	res, err := h.as.SignIn(req, h.jwtKey)
 	return errz.HandleErrz(ctx, res, err)
 }

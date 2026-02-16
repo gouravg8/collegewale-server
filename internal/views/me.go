@@ -11,9 +11,10 @@ type MeLogin struct {
 	Email    *string `json:"email"`
 }
 
-type Me struct {
+type MeResponse struct {
 	Email     string        `json:"email"`
-	Phone     string        `json:"phone;omitempty"`
-	Role      []roles.Roles `json:"role"`
-	CollegeID uint          `json:"college_id;omitempty"`
+	Phone     string        `json:"phone,omitempty"`
+	Roles     []roles.Roles `json:"roles"`
+	CollegeID uint          `json:"college_id,omitempty"`
+	Token     string        `json:"token"`
 }
