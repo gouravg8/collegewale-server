@@ -20,6 +20,7 @@ func NewRegistryHandler(group *echo.Group, registryService *service.RegistryServ
 		s: registryService,
 	}
 	group.POST("/register/college", WithRole(h.RegisterCollege, roles.Admin))
+	group.POST("/register/college/user", WithRole(h.RegisterCollegeAccount, roles.Admin))
 	group.POST("/register/student", WithRole(h.RegisterStudent, roles.Admin, roles.College))
 	return h
 }
@@ -40,7 +41,7 @@ func (h Registry) RegisterCollege(ctx echo.Context) error {
 }
 
 func (h Registry) RegisterStudent(ctx echo.Context) error {
-	var req views.MeLogin //TODO temp make separate user creation struct
+	var req views.MeLogin //TODO TEMP make separate Student user creation struct view
 	err := ctx.Bind(&req)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
@@ -57,5 +58,26 @@ func (h Registry) RegisterStudent(ctx echo.Context) error {
 
 	cc := ctx.(*CustomContext)
 	err = h.s.RegisterStudent(req, cc.user)
+	return errz.HandleErrx(ctx, err)
+}
+
+func (h Registry) RegisterCollegeAccount(ctx echo.Context) error {
+	var req views.MeLogin //TODO TEMP make separate College user creation struct view
+	err := ctx.Bind(&req)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
+	}
+	if strings.TrimSpace(req.Password) == "" {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("password is required"))
+	}
+	if req.Username == nil || strings.TrimSpace(*req.Username) == "" {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("username is required"))
+	}
+	if req.Email == nil || strings.TrimSpace(*req.Email) == "" {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("email is required"))
+	}
+
+	cc := ctx.(*CustomContext)
+	err = h.s.RegisterCollegeAccount(req, cc.user)
 	return errz.HandleErrx(ctx, err)
 }

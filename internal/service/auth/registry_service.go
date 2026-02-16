@@ -70,7 +70,8 @@ func (s RegistryService) RegisterStudent(req views.MeLogin, user *model.User) er
 	var role model.Role
 	err = s.db.Model(&model.Role{}).Where("name = ?", roles.Student).First(&role).Error
 	if err != nil {
-		return err
+		log.Errorf("Failed to find student role: %v", err)
+		return errz.NewBadRequest("role not found")
 	}
 
 	var me = model.User{
@@ -86,6 +87,64 @@ func (s RegistryService) RegisterStudent(req views.MeLogin, user *model.User) er
 	}
 	err = db.DB.Model(&model.User{}).Create(&me).Error
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			ex := pgErr.Detail
+			switch {
+			case strings.Contains(ex, "username"):
+				return errz.NewBadRequest("username already exists")
+			case strings.Contains(ex, "email"):
+				return errz.NewBadRequest("email already exists")
+			default:
+				return errz.NewBadRequest("user already exists")
+			}
+		}
+		return err
+	}
+	return nil
+}
+
+func (s RegistryService) RegisterCollegeAccount(req views.MeLogin, user *model.User) error {
+	if req.Phone != nil && len(*req.Phone) != 10 {
+		return errz.NewBadRequest("Please provide a valid Phone Number")
+	}
+	passwordHash, err := utils.HashPassword(req.Password)
+	if err != nil {
+		log.Errorf("Failed to hash password: %v", err)
+		return errz.NewBadRequest("failed to save user password")
+	}
+	var role model.Role
+	err = s.db.Model(&model.Role{}).Where("name = ?", roles.College).First(&role).Error
+	if err != nil {
+		log.Errorf("Failed to find college role: %v", err)
+		return errz.NewBadRequest("role not found")
+	}
+
+	var me = model.User{
+		Email:        strings.TrimSpace(*req.Email),
+		Username:     strings.TrimSpace(*req.Username),
+		PasswordHash: passwordHash,
+		Roles:        []model.Role{role},
+		CreatedByID:  user.ID,
+	}
+	if req.Phone != nil && strings.TrimSpace(*req.Phone) != "" {
+		cleanedPhone := strings.TrimSpace(*req.Phone)
+		me.Phone = &cleanedPhone
+	}
+	err = db.DB.Model(&model.User{}).Create(&me).Error
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			ex := pgErr.Detail
+			switch {
+			case strings.Contains(ex, "username"):
+				return errz.NewBadRequest("username already exists")
+			case strings.Contains(ex, "email"):
+				return errz.NewBadRequest("email already exists")
+			default:
+				return errz.NewBadRequest("user already exists")
+			}
+		}
 		return err
 	}
 	return nil
