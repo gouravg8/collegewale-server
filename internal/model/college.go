@@ -19,6 +19,7 @@ type College struct {
 	Logo         string
 	Status       enums.CollegeType `gorm:"not null; defualt:'pending'"`
 	PasswordHash string
+	CreatedById  uint
 
 	// invite based login
 	InviteToken  string `gorm:"type:text"`

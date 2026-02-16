@@ -23,15 +23,16 @@ func NewRegistryService(db *gorm.DB) *RegistryService {
 	return &RegistryService{db}
 }
 
-func (s RegistryService) RegisterCollege(req views.College) error {
+func (s RegistryService) RegisterCollege(req views.College, user *model.User) error {
 	clg := model.College{
-		Name:       strings.TrimSpace(req.Name),
-		Code:       strings.TrimSpace(req.Code),
-		Phone:      strings.TrimSpace(req.Phone),
-		Email:      strings.TrimSpace(req.Email),
-		CourseType: req.CourseType,
-		Seats:      req.Seats,
-		Logo:       req.Logo,
+		Name:        strings.TrimSpace(req.Name),
+		Code:        strings.TrimSpace(req.Code),
+		Phone:       strings.TrimSpace(req.Phone),
+		Email:       strings.TrimSpace(req.Email),
+		CourseType:  req.CourseType,
+		Seats:       req.Seats,
+		Logo:        req.Logo,
+		CreatedById: user.ID,
 	}
 
 	if err := s.db.Model(&model.College{}).Create(&clg).Error; err != nil {
@@ -57,7 +58,7 @@ func (s RegistryService) RegisterCollege(req views.College) error {
 	return nil
 }
 
-func (s RegistryService) RegisterStudent(req views.MeLogin) error {
+func (s RegistryService) RegisterStudent(req views.MeLogin, user *model.User) error {
 	if req.Phone != nil && len(*req.Phone) != 10 {
 		return errz.NewBadRequest("Please provide a valid Phone Number")
 	}
@@ -77,6 +78,7 @@ func (s RegistryService) RegisterStudent(req views.MeLogin) error {
 		Username:     strings.TrimSpace(*req.Username),
 		PasswordHash: passwordHash,
 		Roles:        []model.Role{role},
+		CreatedByID:  user.ID,
 	}
 	if req.Phone != nil && strings.TrimSpace(*req.Phone) != "" {
 		cleanedPhone := strings.TrimSpace(*req.Phone)

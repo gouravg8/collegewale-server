@@ -32,7 +32,8 @@ func (h Registry) RegisterCollege(ctx echo.Context) error {
 	if err := req.IsValidRequest(); err != nil {
 		return err
 	}
-	if err := h.s.RegisterCollege(req); err != nil {
+	cc := ctx.(*CustomContext)
+	if err := h.s.RegisterCollege(req, cc.user); err != nil {
 		return errz.HandleErrx(ctx, err)
 	}
 	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
@@ -54,6 +55,7 @@ func (h Registry) RegisterStudent(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("email is required"))
 	}
 
-	err = h.s.RegisterStudent(req)
+	cc := ctx.(*CustomContext)
+	err = h.s.RegisterStudent(req, cc.user)
 	return errz.HandleErrx(ctx, err)
 }

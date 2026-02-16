@@ -12,6 +12,7 @@ type User struct {
 	PasswordHash string `gorm:"type:text;not null"`
 	Roles        []Role `gorm:"many2many:user_roles;"`
 	CollegeID    *uint
+	CreatedByID  uint
 }
 
 type UserRole struct {
