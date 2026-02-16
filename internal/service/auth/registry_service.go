@@ -24,14 +24,6 @@ func NewRegistryService(db *gorm.DB) *RegistryService {
 }
 
 func (s RegistryService) RegisterCollege(req views.College) error {
-	// --- Input Validation ---
-	var existingCount int64
-	if err := s.db.Model(&model.College{}).Where("code = ?", req.Code).Count(&existingCount).Error; err != nil {
-		return err
-	} else if existingCount > 0 {
-		return errz.NewBadRequest("college already exists")
-	}
-
 	clg := model.College{
 		Name:       strings.TrimSpace(req.Name),
 		Code:       strings.TrimSpace(req.Code),
@@ -47,16 +39,14 @@ func (s RegistryService) RegisterCollege(req views.College) error {
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			ex := pgErr.Detail
 			switch {
+			case strings.Contains(ex, "name"):
+				return errz.NewBadRequest("college name already exists")
 			case strings.Contains(ex, "email"):
 				return errz.NewBadRequest("email  already exists")
-			case strings.Contains(ex, "username"):
-				return errz.NewBadRequest("username already exists")
 			case strings.Contains(ex, "phone"):
 				return errz.NewBadRequest("phone already linked with another college")
 			case strings.Contains(ex, "code"):
 				return errz.NewBadRequest("college code already exists")
-			case strings.Contains(ex, "name"):
-				return errz.NewBadRequest("college name already exists")
 			default:
 				return errz.NewBadRequest("college already exists")
 			}
