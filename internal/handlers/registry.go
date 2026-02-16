@@ -6,6 +6,7 @@ import (
 	service "collegeWaleServer/internal/service/auth"
 	"collegeWaleServer/internal/views"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -19,7 +20,7 @@ func NewRegistryHandler(group *echo.Group, registryService *service.RegistryServ
 		s: registryService,
 	}
 	group.POST("/register/college", WithRole(h.RegisterCollege, roles.Admin))
-	group.POST("/register/student", h.RegisterStudent)
+	group.POST("/register/student", WithRole(h.RegisterStudent, roles.Admin, roles.College))
 	return h
 }
 
@@ -37,19 +38,19 @@ func (h Registry) RegisterCollege(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
 }
 
-func (h Registry) RegisterStudent(ctx echo.Context) error { //TODO it will need either admin or college role
-	var req views.MeLogin //TODO temp make seperate user creation struct
+func (h Registry) RegisterStudent(ctx echo.Context) error {
+	var req views.MeLogin //TODO temp make separate user creation struct
 	err := ctx.Bind(&req)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
 	}
-	if req.Password == "" {
+	if strings.TrimSpace(req.Password) == "" {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("password is required"))
 	}
-	if req.Username == nil || *req.Username == "" {
+	if req.Username == nil || strings.TrimSpace(*req.Username) == "" {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("username is required"))
 	}
-	if req.Email == nil || *req.Email == "" {
+	if req.Email == nil || strings.TrimSpace(*req.Email) == "" {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("email is required"))
 	}
 
