@@ -26,6 +26,10 @@ func NewRegistryHandler(group *echo.Group, registryService *service.RegistryServ
 }
 
 func (h Registry) RegisterCollege(ctx echo.Context) error {
+	cc := ctx.(*CustomContext)
+	if cc == nil {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("user does not exist"))
+	}
 	var req views.College
 	if err := ctx.Bind(&req); err != nil {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
@@ -33,7 +37,6 @@ func (h Registry) RegisterCollege(ctx echo.Context) error {
 	if err := req.IsValidRequest(); err != nil {
 		return err
 	}
-	cc := ctx.(*CustomContext)
 	if err := h.s.RegisterCollege(req, cc.user); err != nil {
 		return errz.HandleErrx(ctx, err)
 	}
@@ -41,6 +44,10 @@ func (h Registry) RegisterCollege(ctx echo.Context) error {
 }
 
 func (h Registry) RegisterStudent(ctx echo.Context) error {
+	cc := ctx.(*CustomContext)
+	if cc == nil {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("user does not exist"))
+	}
 	var req views.MeLogin //TODO TEMP make separate Student user creation struct view
 	err := ctx.Bind(&req)
 	if err != nil {
@@ -56,12 +63,15 @@ func (h Registry) RegisterStudent(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("email is required"))
 	}
 
-	cc := ctx.(*CustomContext)
 	err = h.s.RegisterStudent(req, cc.user)
 	return errz.HandleErrx(ctx, err)
 }
 
 func (h Registry) RegisterCollegeAccount(ctx echo.Context) error {
+	cc := ctx.(*CustomContext)
+	if cc == nil {
+		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("user does not exist"))
+	}
 	var req views.MeLogin //TODO TEMP make separate College user creation struct view
 	err := ctx.Bind(&req)
 	if err != nil {
@@ -77,7 +87,6 @@ func (h Registry) RegisterCollegeAccount(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("email is required"))
 	}
 
-	cc := ctx.(*CustomContext)
 	err = h.s.RegisterCollegeAccount(req, cc.user)
 	return errz.HandleErrx(ctx, err)
 }
