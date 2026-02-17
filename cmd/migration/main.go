@@ -1,21 +1,22 @@
 package main
 
 import (
-	"collegeWaleServer/internal/database"
+	"collegeWaleServer/internal/db"
+	"collegeWaleServer/internal/model"
 	"log"
 )
 
 var modelsToMigrate = []any{
-	// &models.College{},
-	// &models.Attendance{},
-	// &models.Student{},
-	// &models.Subject{},
-	// &models.User{},
+	&model.College{},
+	&model.Attendance{},
+	&model.Student{},
+	&model.Subject{},
+	&model.User{},
 }
 
 func main() {
-	dbService := database.New()
-	err := dbService.DB.AutoMigrate(modelsToMigrate...)
+	dbService := db.New()
+	err := dbService.GetDatabase().AutoMigrate(modelsToMigrate...)
 
 	if err != nil {
 		log.Fatalf("failed to migrate db %v", err)

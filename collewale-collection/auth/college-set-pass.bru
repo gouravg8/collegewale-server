@@ -1,0 +1,25 @@
+meta {
+  name: college-set-pass
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{authhost}}/college-signup
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "code": "11",
+    "email": "ukuni@gmail.com",
+    "password": "",
+    "confirm_password": ""
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

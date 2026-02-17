@@ -1,4 +1,4 @@
-package database
+package db
 
 import (
 	"context"
@@ -12,64 +12,84 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 )
-
-// DbService defines the interface for database operations
-type DbService interface {
-	Health() map[string]string
-	Close() error
-}
 
 type Service struct {
-	DB *gorm.DB
+	db *gorm.DB
 }
 
-var (
-	database   = os.Getenv("DB_DATABASE")
-	password   = os.Getenv("DB_PASSWORD")
-	username   = os.Getenv("DB_USERNAME")
-	port       = os.Getenv("DB_PORT")
-	host       = os.Getenv("DB_HOST")
-	schema     = os.Getenv("DB_SCHEMA")
-	dbInstance *Service
-)
+var DB *gorm.DB
 
-// New initializes a new database connection (singleton)
+var dbService *Service
+
+// New initializes a new db connection (singleton)
 func New() *Service {
-	if dbInstance != nil {
-		return dbInstance
+	if dbService != nil {
+		return dbService
+	}
+	var (
+		database = os.Getenv("DB_DATABASE")
+		password = os.Getenv("DB_PASSWORD")
+		username = os.Getenv("DB_USERNAME")
+		port     = os.Getenv("DB_PORT")
+		host     = os.Getenv("DB_HOST")
+	)
+	if host == "" {
+		host = "localhost"
+	}
+	if port == "" {
+		port = "5432"
 	}
 
+	if portInt, err := strconv.Atoi(port); err != nil {
+		log.Fatalf("Could not parse PORT environment variable :: %v", err)
+		return nil
+	} else {
+		DB, err = openDb(database, username, password, host, portInt)
+		if err != nil {
+			log.Fatalf("Could not connect to db: %v", err)
+		}
+		dbService = &Service{db: DB}
+		return dbService
+	}
+}
+
+func openDb(dbName, user, password, host string, dbPort int) (*gorm.DB, error) {
 	connStr := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable search_path=%s",
-		host, username, password, database, port, schema,
+		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable",
+		host, user, password, dbName, dbPort,
 	)
 
-	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
-	if err != nil {
-		log.Fatal("failed to connect to database:", err)
-	}
-
-	dbInstance = &Service{DB: db}
-	return dbInstance
+	return gorm.Open(postgres.New(postgres.Config{
+		DSN:                  connStr,
+		PreferSimpleProtocol: true,
+	}), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true,
+		},
+		TranslateError: false, // Set to true if you want GORM to translate db errors to standard errors
+	})
 }
 
-// Health checks the health of the database connection
+// Health checks the health of the db connection
 func (s *Service) Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
 	stats := make(map[string]string)
 
-	// Get underlying *sql.DB
-	sqlDB, err := s.DB.DB()
+	// Get underlying *sql.db
+	sqlDB, err := s.db.DB()
 	if err != nil {
 		stats["status"] = "down"
-		stats["error"] = fmt.Sprintf("failed to get sql.DB: %v", err)
+		stats["error"] = fmt.Sprintf("failed to get sql.db: %v", err)
 		return stats
 	}
 
-	// Ping the database
+	// Ping the db
 	if err := sqlDB.PingContext(ctx); err != nil {
 		stats["status"] = "down"
 		stats["error"] = fmt.Sprintf("db down: %v", err)
@@ -93,7 +113,7 @@ func (s *Service) Health() map[string]string {
 
 	// Evaluate stats
 	if dbStats.OpenConnections > 40 {
-		stats["message"] = "The database is experiencing heavy load."
+		stats["message"] = "The db is experiencing heavy load."
 	}
 	if dbStats.WaitCount > 1000 {
 		stats["message"] = "High number of wait events, possible bottlenecks."
@@ -108,12 +128,16 @@ func (s *Service) Health() map[string]string {
 	return stats
 }
 
-// Close closes the database connection
+// Close closes the db connection
 func (s *Service) Close() error {
-	sqlDB, err := s.DB.DB()
+	sqlDB, err := s.db.DB()
 	if err != nil {
 		return err
 	}
-	log.Printf("Disconnected from database: %s", database)
+	log.Printf("Disconnected from db")
 	return sqlDB.Close()
+}
+
+func (s *Service) GetDatabase() *gorm.DB {
+	return s.db
 }

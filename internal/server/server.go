@@ -1,41 +1,72 @@
 package server
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 
-	"collegeWaleServer/internal/database"
+	"collegeWaleServer/internal/db"
 )
 
 type Server struct {
-	port int
-
-	db database.Service
+	e  *echo.Echo
+	db db.Service
 }
 
-func NewServer() *http.Server {
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	NewServer := &Server{
-		port: port,
+func NewServer() *Server {
+	return &Server{}
+}
 
-		db: *database.New(),
+func (s *Server) Init() error {
+	e := echo.New()
+	s.e = e
+	s.db = *db.New()
+
+	e.Use(middleware.RequestLogger())
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"https://*", "http://*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
+
+	/*----echo-config----*/
+	e.Server.Handler = s.RegisterRoutes()
+	e.Server.IdleTimeout = time.Minute
+
+	return nil
+}
+
+func (s *Server) Run() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
 
-	// Declare Server config
-	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", NewServer.port),
-		Handler:      NewServer.RegisterRoutes(),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+	log.Printf("Starting server on port %s", port)
+	err := s.e.Start(fmt.Sprintf(":%s", port))
+	if !errors.Is(err, http.ErrServerClosed) && err != nil {
+		log.Fatalf("Shutting down the server due to error: %v", err)
 	}
+	log.Println("Server connection pool closed.")
+}
 
-	fmt.Printf("server is running on port %v\n", port)
+func (s *Server) GetServer() *http.Server {
+	if s.e != nil {
+		return s.e.Server
+	}
+	return nil
+}
 
-	return server
+func (s *Server) dbHealth(c echo.Context) error {
+	return c.JSON(http.StatusOK, s.db.Health())
 }

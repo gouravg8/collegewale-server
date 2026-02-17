@@ -1,4 +1,4 @@
-package database
+package db
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 
 func mustStartPostgresContainer() (func(context.Context, ...testcontainers.TerminateOption) error, error) {
 	var (
-		dbName = "database"
+		dbName = "db"
 		dbPwd  = "password"
 		dbUser = "user"
 	)
@@ -25,7 +25,7 @@ func mustStartPostgresContainer() (func(context.Context, ...testcontainers.Termi
 		postgres.WithUsername(dbUser),
 		postgres.WithPassword(dbPwd),
 		testcontainers.WithWaitStrategy(
-			wait.ForLog("database system is ready to accept connections").
+			wait.ForLog("db system is ready to accept connections").
 				WithOccurrence(2).
 				WithStartupTimeout(5*time.Second)),
 	)

@@ -1,7 +1,7 @@
-package models
+package model
 
 import (
-	"collegeWaleServer/internal/enums"
+	"collegeWaleServer/internal/enums/college"
 
 	"gorm.io/gorm"
 )
@@ -15,12 +15,12 @@ type Student struct {
 	Phone     string `gorm:"size:20"`
 
 	UserID int
-	User User
-	
+	User   User
+
 	// Academic info
-	RollNumber string           `gorm:"uniqueIndex;size:50;not null"`
-	CourseType enums.CourseType `gorm:"not null"`
-	Year       int              `gorm:"not null"`
+	RollNumber string             `gorm:"uniqueIndex;size:50;not null"`
+	CourseType college.CourseType `gorm:"not null"`
+	Year       int                `gorm:"not null"`
 
 	// relationships
 	CollegeID uint    `gorm:"not null"` // fk -> college

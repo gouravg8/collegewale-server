@@ -1,0 +1,24 @@
+meta {
+  name: college-login
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{authhost}}/college-login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "code": "11",
+    "email": "ukuni@gmail.com",
+    "password": ""
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
