@@ -76,7 +76,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		//	return next(cc)
 		//}
 		var dbuser model.User
-		err = db.DB.Model(&model.User{}).Preload("Roles").Where("username = ?", sub).First(&dbuser).Error
+		err = db.DB.Model(&model.User{}).Preload("Roles").Preload("College").Preload("Student").Where("username = ?", sub).First(&dbuser).Error
 		if err != nil {
 			log.Error("error fetching user details", err)
 			return next(cc)

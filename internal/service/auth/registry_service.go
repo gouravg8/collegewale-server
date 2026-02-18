@@ -57,10 +57,7 @@ func (s RegistryService) RegisterCollege(req views.College, user *model.User) er
 	return nil
 }
 
-func (s RegistryService) RegisterStudent(req views.MeLogin, user *model.User) error {
-	if req.Phone != nil && len(*req.Phone) != 10 {
-		return errz.NewBadRequest("Please provide a valid Phone Number")
-	}
+func (s RegistryService) RegisterStudent(req views.StudentForm, user *model.User) error {
 	passwordHash, err := utils.HashPassword(req.Password)
 	if err != nil {
 		log.Errorf("Failed to hash password: %v", err)
@@ -71,6 +68,9 @@ func (s RegistryService) RegisterStudent(req views.MeLogin, user *model.User) er
 	if err != nil {
 		log.Errorf("Failed to find student role: %v", err)
 		return errz.NewBadRequest("role not found")
+	}
+	var student = model.Student{
+		FirstName: req.FirstName,
 	}
 
 	var me = model.User{
