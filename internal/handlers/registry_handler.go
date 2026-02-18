@@ -41,6 +41,10 @@ func (h Registry) RegisterCollege(ctx echo.Context) error {
 }
 
 func (h Registry) RegisterStudent(ctx echo.Context) error {
+	cc := ctx.(*CustomContext)
+	if cc == nil {
+		return ctx.JSON(http.StatusOK, errz.NewBadRequest("user not found."))
+	}
 	var req views.MeLogin //TODO TEMP make separate Student user creation struct view
 	err := ctx.Bind(&req)
 	if err != nil {
@@ -56,12 +60,15 @@ func (h Registry) RegisterStudent(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("email is required"))
 	}
 
-	cc := ctx.(*CustomContext)
 	err = h.s.RegisterStudent(req, cc.user)
 	return errz.HandleErrx(ctx, err)
 }
 
 func (h Registry) RegisterCollegeAccount(ctx echo.Context) error {
+	cc := ctx.(*CustomContext)
+	if cc == nil {
+		return ctx.JSON(http.StatusOK, errz.NewBadRequest("user not found."))
+	}
 	var req views.MeLogin //TODO TEMP make separate College user creation struct view
 	err := ctx.Bind(&req)
 	if err != nil {
@@ -77,7 +84,6 @@ func (h Registry) RegisterCollegeAccount(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("email is required"))
 	}
 
-	cc := ctx.(*CustomContext)
 	err = h.s.RegisterCollegeAccount(req, cc.user)
 	return errz.HandleErrx(ctx, err)
 }

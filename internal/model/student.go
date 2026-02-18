@@ -9,22 +9,18 @@ import (
 type Student struct {
 	gorm.Model
 	// Basic info
-	FirstName string `gorm:"size:100;not null"`
-	LastName  string `gorm:"size:100;not null"`
-	Email     string `gorm:"uniqueIndex;size:255;not null"`
+	FirstName string `gorm:"size:80;not null"`
+	LastName  string `gorm:"size:80;not null"`
+	Email     string `gorm:"uniqueIndex;varchar(255);not null"`
 	Phone     string `gorm:"size:20"`
-
-	UserID int
-	User   User
-
 	// Academic info
-	RollNumber string             `gorm:"uniqueIndex;size:50;not null"`
-	CourseType college.CourseType `gorm:"not null"`
-	Year       int                `gorm:"not null"`
-
-	// relationships
-	CollegeID uint    `gorm:"not null"` // fk -> college
-	College   College `gorm:"foreignKey:CollegeID"`
+	RollNumber       string             `gorm:"not null"`
+	CourseType       college.CourseType `gorm:"not null"`
+	Year             int                `gorm:"not null"`
+	Gender           string
+	Semester         string
+	EnrollmentNumber string
+	CollegeCode      string `gorm:"notnull"` //can be used to get college info
 
 	Subject []Subject `gorm:"many2many:student_subjects"`
 }

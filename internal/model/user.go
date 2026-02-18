@@ -11,7 +11,10 @@ type User struct {
 	Phone        *string
 	PasswordHash string `gorm:"type:text;not null"`
 	Roles        []Role `gorm:"many2many:user_roles;"`
-	CollegeID    *uint
+	CollegeId    uint
+	College      *College `gorm:"foreignKey:CollegeId;references:ID;"`
+	StudentId    uint
+	Student      *Student `gorm:"foreignKey:StudentId;references:ID;"`
 	CreatedByID  uint
 }
 

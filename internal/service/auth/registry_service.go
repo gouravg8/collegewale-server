@@ -79,6 +79,8 @@ func (s RegistryService) RegisterStudent(req views.MeLogin, user *model.User) er
 		PasswordHash: passwordHash,
 		Roles:        []model.Role{role},
 		CreatedByID:  user.ID,
+		CollegeId:    user.CollegeId,
+		College:      user.College,
 	}
 	if req.Phone != nil && strings.TrimSpace(*req.Phone) != "" {
 		cleanedPhone := strings.TrimSpace(*req.Phone)
