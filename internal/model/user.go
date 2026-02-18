@@ -13,8 +13,7 @@ type User struct {
 	Roles        []Role `gorm:"many2many:user_roles;"`
 	CollegeId    uint
 	College      *College `gorm:"foreignKey:CollegeId;references:ID;"`
-	StudentId    uint
-	Student      *Student `gorm:"foreignKey:StudentId;references:ID;"`
+	Student      *Student
 	CreatedByID  uint
 }
 

@@ -21,6 +21,9 @@ type Student struct {
 	Semester         string
 	EnrollmentNumber string
 	CollegeCode      string `gorm:"notnull"` //can be used to get college info
+	//relation
+	UserId uint
+	User   *User `gorm:"foreignKey:UserID;references:ID;"`
 
 	Subject []Subject `gorm:"many2many:student_subjects"`
 }
