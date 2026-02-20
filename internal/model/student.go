@@ -20,7 +20,7 @@ type Student struct {
 	Gender           string
 	Semester         string
 	EnrollmentNumber string
-	CollegeCode      string `gorm:"notnull"` //can be used to get college info
+	CollegeCode      string `gorm:"notnull;default:'N/A'"` //can be used to get college info
 	//relation
 	UserID uint
 	User   *User `gorm:"foreignKey:UserID;references:ID;"`

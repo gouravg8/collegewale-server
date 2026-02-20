@@ -90,7 +90,7 @@ func (s RegistryService) RegisterStudent(req views.StudentForm, user *model.User
 		Username:     strings.TrimSpace(req.Username),
 		PasswordHash: passwordHash,
 		Roles:        []model.Role{role},
-		College:      user.College,
+		CollegeId:    user.CollegeId,
 		Student:      &student,
 		CreatedByID:  user.ID,
 	}
