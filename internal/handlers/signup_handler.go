@@ -112,7 +112,7 @@ func (h AuthHandler) CollegeLogin(c echo.Context) error {
 	}
 
 	if req.Code == "" && req.Email == "" {
-		return c.JSON(http.StatusBadRequest, views.Response{Message: "College Code or Email is required"})
+		return c.JSON(http.StatusBadRequest, views.Response{Message: "CollegeRequest Code or Email is required"})
 	}
 
 	if req.Password == "" {

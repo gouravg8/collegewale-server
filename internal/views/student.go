@@ -7,11 +7,9 @@ import (
 	"strings"
 )
 
-type StudentInfoResponse struct { //TODO add more info as required per user
+type StudentInfoResponse struct {
 	FirstName        string             `json:"first_name"`
 	LastName         string             `json:"last_name"`
-	Email            string             `json:"email"`
-	Phone            string             `json:"phone"`
 	RollNumber       string             `json:"roll_number"`
 	CourseType       college.CourseType `json:"course_type"`
 	Year             int                `json:"year"`

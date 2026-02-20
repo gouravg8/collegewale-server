@@ -23,7 +23,7 @@ func NewRegistryService(db *gorm.DB) *RegistryService {
 	return &RegistryService{db}
 }
 
-func (s RegistryService) RegisterCollege(req views.College, user *model.User) error {
+func (s RegistryService) RegisterCollege(req views.CollegeRequest, user *model.User) error {
 	clg := model.College{
 		Name:        strings.TrimSpace(req.Name),
 		Code:        strings.TrimSpace(req.Code),

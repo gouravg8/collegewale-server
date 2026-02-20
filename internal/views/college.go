@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type College struct {
+type CollegeRequest struct {
 	Name       string             `json:"name"`
 	Code       string             `json:"code"`
 	Phone      string             `json:"phone"`
@@ -17,7 +17,13 @@ type College struct {
 	Logo       string             `json:"logo"`
 }
 
-func (c *College) IsValidRequest() error {
+type CollegeResponse struct {
+	Name string `json:"name"`
+	Code string `json:"code"`
+	Logo string `json:"logo"`
+}
+
+func (c *CollegeRequest) IsValidRequest() error {
 	if strings.TrimSpace(c.Name) == "" {
 		return errz.NewBadRequest("college name cannot be empty")
 	}

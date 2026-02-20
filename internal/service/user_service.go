@@ -3,6 +3,7 @@ package service
 import (
 	"collegeWaleServer/errz"
 	"collegeWaleServer/internal/model"
+	"collegeWaleServer/internal/views"
 
 	"gorm.io/gorm"
 )
@@ -15,9 +16,10 @@ func NewUserService(db *gorm.DB) *UserService {
 	return &UserService{db: db}
 }
 
-func (u UserService) MyInfo(user *model.User) (interface{}, error) {
+func (u UserService) MyInfo(user *model.User) (*views.MyInfo, error) {
 	if user == nil {
 		return nil, errz.NewNotFound("user not found")
 	}
-	return user, nil
+	myInfo := views.NewMyInfo(*user)
+	return &myInfo, nil
 }

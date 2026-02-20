@@ -25,7 +25,7 @@ func NewRegistryHandler(group *echo.Group, registryService *service.RegistryServ
 }
 
 func (h Registry) RegisterCollege(c echo.Context) error {
-	var req views.College
+	var req views.CollegeRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
 	}
@@ -67,7 +67,7 @@ func (h Registry) RegisterCollegeAccount(ctx echo.Context) error {
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
 	}
-	
+
 	if err = req.IsValid(); err != nil {
 		return errz.HandleErrx(ctx, err)
 	}
