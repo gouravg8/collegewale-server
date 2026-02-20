@@ -81,18 +81,18 @@ func (s RegistryService) RegisterStudent(req views.StudentForm, user *model.User
 		Semester:         req.Semester,
 		EnrollmentNumber: req.EnrollmentNumber,
 	}
-	if user.College != nil {
-		student.CollegeCode = user.College.Code
-	}
 
 	var me = model.User{
 		Email:        strings.TrimSpace(req.Email),
 		Username:     strings.TrimSpace(req.Username),
 		PasswordHash: passwordHash,
 		Roles:        []model.Role{role},
-		CollegeId:    user.CollegeId,
+		CollegeID:    user.CollegeID,
 		Student:      &student,
 		CreatedByID:  user.ID,
+	}
+	if user.College != nil {
+		student.CollegeCode = user.College.Code
 	}
 	cleanedPhone := strings.TrimSpace(req.Phone)
 	if cleanedPhone != "" {

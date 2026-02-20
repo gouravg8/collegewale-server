@@ -25,37 +25,37 @@ func NewRegistryHandler(group *echo.Group, registryService *service.RegistryServ
 	return h
 }
 
-func (h Registry) RegisterCollege(ctx echo.Context) error {
+func (h Registry) RegisterCollege(c echo.Context) error {
 	var req views.College
-	if err := ctx.Bind(&req); err != nil {
-		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
 	}
 	if err := req.IsValidRequest(); err != nil {
-		return err
+		return errz.HandleErrx(c, err)
 	}
-	cc := ctx.(*CustomContext)
+	cc := c.(*CustomContext)
 	if err := h.s.RegisterCollege(req, cc.user); err != nil {
-		return errz.HandleErrx(ctx, err)
+		return errz.HandleErrx(c, err)
 	}
-	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
+	return c.JSON(http.StatusOK, views.Response{Message: "success"})
 }
 
-func (h Registry) RegisterStudent(ctx echo.Context) error {
-	cc := ctx.(*CustomContext)
+func (h Registry) RegisterStudent(c echo.Context) error {
+	cc := c.(*CustomContext)
 	if cc == nil {
-		return ctx.JSON(http.StatusOK, errz.NewBadRequest("user not found."))
+		return c.JSON(http.StatusOK, errz.NewBadRequest("user not found."))
 	}
-	var req views.StudentForm //TODO TEMP make separate Student user creation struct view
-	err := ctx.Bind(&req)
+	var req views.StudentForm
+	err := c.Bind(&req)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
+		return c.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
 	}
 	err = req.IsValid()
 	if err != nil {
-		return err
+		return errz.HandleErrx(c, err)
 	}
 	err = h.s.RegisterStudent(req, cc.user)
-	return errz.HandleErrx(ctx, err)
+	return errz.HandleErrx(c, err)
 }
 
 func (h Registry) RegisterCollegeAccount(ctx echo.Context) error {
