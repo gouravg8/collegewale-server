@@ -117,10 +117,7 @@ func (s RegistryService) RegisterStudent(req views.StudentForm, user *model.User
 	return nil
 }
 
-func (s RegistryService) RegisterCollegeAccount(req views.MeLogin, user *model.User) error {
-	if req.Phone != nil && len(*req.Phone) != 10 {
-		return errz.NewBadRequest("Please provide a valid Phone Number")
-	}
+func (s RegistryService) RegisterCollegeAccount(req views.CollegeSignup, user *model.User) error {
 	passwordHash, err := utils.HashPassword(req.Password)
 	if err != nil {
 		log.Errorf("Failed to hash password: %v", err)
@@ -132,16 +129,21 @@ func (s RegistryService) RegisterCollegeAccount(req views.MeLogin, user *model.U
 		log.Errorf("Failed to find college role: %v", err)
 		return errz.NewBadRequest("role not found")
 	}
+	var college model.College
+	if err = s.db.Model(&model.College{}).Where("code = ?", req.Code).First(&college).Error; err != nil {
+		return errz.NewBadRequest("college code not found")
+	}
 
 	var me = model.User{
-		Email:        strings.TrimSpace(*req.Email),
-		Username:     strings.TrimSpace(*req.Username),
+		Username:     strings.TrimSpace(req.Username),
+		Email:        strings.TrimSpace(req.Email),
 		PasswordHash: passwordHash,
 		Roles:        []model.Role{role},
+		CollegeID:    &college.ID,
 		CreatedByID:  user.ID,
 	}
-	if req.Phone != nil && strings.TrimSpace(*req.Phone) != "" {
-		cleanedPhone := strings.TrimSpace(*req.Phone)
+	cleanedPhone := strings.TrimSpace(req.Phone)
+	if cleanedPhone != "" {
 		me.Phone = &cleanedPhone
 	}
 	err = db.DB.Model(&model.User{}).Create(&me).Error

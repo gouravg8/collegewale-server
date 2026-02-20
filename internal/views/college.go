@@ -47,3 +47,27 @@ func (c *College) IsValidRequest() error {
 	}
 	return nil
 }
+
+type CollegeSignup struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Phone    string `json:"phone"`
+	Email    string `json:"email"`
+	Code     string `json:"code"`
+}
+
+func (c CollegeSignup) IsValid() error {
+	if strings.TrimSpace(c.Password) == "" {
+		return errz.NewBadRequest("password is required")
+	}
+	if strings.TrimSpace(c.Username) == "" {
+		return errz.NewBadRequest("username is required")
+	}
+	if strings.TrimSpace(c.Email) == "" {
+		return errz.NewBadRequest("email is required")
+	}
+	if !utils.IsPhoneValid(strings.TrimSpace(c.Phone)) {
+		return errz.NewBadRequest("phone is required")
+	}
+	return nil
+}

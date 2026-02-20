@@ -6,7 +6,6 @@ import (
 	service "collegeWaleServer/internal/service/auth"
 	"collegeWaleServer/internal/views"
 	"net/http"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -63,19 +62,14 @@ func (h Registry) RegisterCollegeAccount(ctx echo.Context) error {
 	if cc == nil {
 		return ctx.JSON(http.StatusOK, errz.NewBadRequest("user not found."))
 	}
-	var req views.MeLogin //TODO TEMP make separate College user creation struct view
+	var req views.CollegeSignup
 	err := ctx.Bind(&req)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
 	}
-	if strings.TrimSpace(req.Password) == "" {
-		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("password is required"))
-	}
-	if req.Username == nil || strings.TrimSpace(*req.Username) == "" {
-		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("username is required"))
-	}
-	if req.Email == nil || strings.TrimSpace(*req.Email) == "" {
-		return ctx.JSON(http.StatusBadRequest, errz.NewBadRequest("email is required"))
+	
+	if err = req.IsValid(); err != nil {
+		return errz.HandleErrx(ctx, err)
 	}
 
 	err = h.s.RegisterCollegeAccount(req, cc.user)
