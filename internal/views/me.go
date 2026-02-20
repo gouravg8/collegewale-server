@@ -12,9 +12,9 @@ type MeLogin struct {
 }
 
 type MeResponse struct {
-	Email     string        `json:"email"`
-	Phone     string        `json:"phone,omitempty"`
-	Roles     []roles.Roles `json:"roles"`
-	CollegeID uint          `json:"college_id,omitempty"`
-	Token     string        `json:"token"`
+	Email       string        `json:"email"`
+	Phone       string        `json:"phone,omitempty"`
+	Roles       []roles.Roles `json:"roles"`
+	CollegeCode string        `json:"college_code,omitempty"`
+	Token       string        `json:"token"`
 }

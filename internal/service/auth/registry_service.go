@@ -70,20 +70,32 @@ func (s RegistryService) RegisterStudent(req views.StudentForm, user *model.User
 		return errz.NewBadRequest("role not found")
 	}
 	var student = model.Student{
-		FirstName: req.FirstName,
+		FirstName:        req.FirstName,
+		LastName:         req.LastName,
+		Email:            req.Email,
+		Phone:            req.Phone,
+		RollNumber:       req.RollNumber,
+		CourseType:       req.CourseType,
+		Year:             req.Year,
+		Gender:           req.Gender,
+		Semester:         req.Semester,
+		EnrollmentNumber: req.EnrollmentNumber,
+	}
+	if user.College != nil {
+		student.CollegeCode = user.College.Code
 	}
 
 	var me = model.User{
-		Email:        strings.TrimSpace(*req.Email),
-		Username:     strings.TrimSpace(*req.Username),
+		Email:        strings.TrimSpace(req.Email),
+		Username:     strings.TrimSpace(req.Username),
 		PasswordHash: passwordHash,
 		Roles:        []model.Role{role},
-		CreatedByID:  user.ID,
-		CollegeId:    user.CollegeId,
 		College:      user.College,
+		Student:      &student,
+		CreatedByID:  user.ID,
 	}
-	if req.Phone != nil && strings.TrimSpace(*req.Phone) != "" {
-		cleanedPhone := strings.TrimSpace(*req.Phone)
+	cleanedPhone := strings.TrimSpace(req.Phone)
+	if cleanedPhone != "" {
 		me.Phone = &cleanedPhone
 	}
 	err = db.DB.Model(&model.User{}).Create(&me).Error

@@ -211,8 +211,8 @@ func (s AuthService) SignIn(req views.MeLogin, key string) (*views.MeResponse, e
 		Roles: myRoles,
 		Token: tkn,
 	}
-	if me.CollegeID != nil {
-		res.CollegeID = *me.CollegeID
+	if me.College != nil {
+		res.CollegeCode = me.College.Code
 	}
 	if me.Phone != nil {
 		res.Phone = *me.Phone
