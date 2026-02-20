@@ -112,7 +112,7 @@ func (s AuthService) CollegeSignup(req auth_view.CollegeSignup) (model.College, 
 
 	if err := emailService.SendTemplateEmail(
 		req.Email,
-		"Verify Your CollegeRequest Account",
+		"Verify Your College Account",
 		"internal/service/email/templates/verification.html",
 		data,
 	); err != nil {
