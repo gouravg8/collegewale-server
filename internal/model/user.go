@@ -12,6 +12,8 @@ type User struct {
 	PasswordHash string `gorm:"type:text;not null"`
 	Roles        []Role `gorm:"many2many:user_roles;"`
 	CollegeID    *uint
+	College      *College `gorm:"foreignKey:CollegeID;references:ID;"`
+	Student      *Student
 	CreatedByID  uint
 }
 
