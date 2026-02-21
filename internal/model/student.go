@@ -16,7 +16,9 @@ type Student struct {
 	// Academic info
 	RollNumber       string             `gorm:"not null"`
 	CourseType       college.CourseType `gorm:"not null"`
-	Year             int                `gorm:"not null"`
+	CourseID         uint
+	Course           Courses `gorm:"foreignKey:CourseID;references:ID;"`
+	Year             int     `gorm:"not null"`
 	Gender           string
 	Semester         string
 	EnrollmentNumber string
@@ -24,6 +26,4 @@ type Student struct {
 	//relation
 	UserID uint
 	User   *User `gorm:"foreignKey:UserID;references:ID;"`
-
-	Subject []Subject `gorm:"many2many:student_subjects"`
 }
