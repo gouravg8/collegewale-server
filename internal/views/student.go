@@ -8,15 +8,14 @@ import (
 )
 
 type StudentInfoResponse struct {
-	FirstName        string             `json:"first_name"`
-	LastName         string             `json:"last_name"`
-	RollNumber       string             `json:"roll_number"`
-	CourseType       college.CourseType `json:"course_type"`
-	Year             int                `json:"year"`
-	Subjects         []string           `json:"subjects"`
-	EnrollmentNumber string             `json:"enrollment_number"`
-	Semester         string             `json:"semester"`
-	Gender           string             `json:"gender"`
+	FirstName        string `json:"first_name"`
+	LastName         string `json:"last_name"`
+	RollNumber       string `json:"roll_number"`
+	Course           string `json:"course"`
+	Year             int    `json:"year"`
+	EnrollmentNumber string `json:"enrollment_number"`
+	Semester         string `json:"semester"`
+	Gender           string `json:"gender"`
 }
 
 type StudentForm struct { //TODO add more info as required per user

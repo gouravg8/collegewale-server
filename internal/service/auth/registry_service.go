@@ -8,6 +8,7 @@ import (
 	"collegeWaleServer/internal/utils"
 	"collegeWaleServer/internal/views"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/log"
@@ -24,12 +25,33 @@ func NewRegistryService(db *gorm.DB) *RegistryService {
 }
 
 func (s RegistryService) RegisterCollege(req views.CollegeRequest, user *model.User) error {
+	var courses []model.Courses
+	if err := s.db.Model(&model.Courses{}).Find(&courses).Error; err != nil {
+		return err
+	}
+	var courseList []model.Courses
+	for _, rc := range req.Courses {
+		found := false
+		for _, c := range courses {
+			if c.Name == rc {
+				courseList = append(courseList, c)
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errz.NewBadRequest(fmt.Sprintf("course :: %s not found", rc))
+		}
+	}
+	if len(courseList) != len(req.Courses) {
+		return errz.NewBadRequest("courses not found")
+	}
 	clg := model.College{
 		Name:        strings.TrimSpace(req.Name),
 		Code:        strings.TrimSpace(req.Code),
 		Phone:       strings.TrimSpace(req.Phone),
 		Email:       strings.TrimSpace(req.Email),
-		CourseType:  req.CourseType,
+		Courses:     courseList,
 		Seats:       req.Seats,
 		Logo:        req.Logo,
 		CreatedById: user.ID,
@@ -69,13 +91,15 @@ func (s RegistryService) RegisterStudent(req views.StudentForm, user *model.User
 		log.Errorf("Failed to find student role: %v", err)
 		return errz.NewBadRequest("role not found")
 	}
+	var courseID uint
+	err = s.db.Model(&model.Courses{}).Where("name = ?", req.CourseType).Pluck("id", &courseID).Error
 	var student = model.Student{
 		FirstName:        req.FirstName,
 		LastName:         req.LastName,
 		Email:            req.Email,
 		Phone:            req.Phone,
 		RollNumber:       req.RollNumber,
-		CourseType:       req.CourseType,
+		CourseID:         courseID,
 		Year:             req.Year,
 		Gender:           req.Gender,
 		Semester:         req.Semester,
@@ -90,9 +114,6 @@ func (s RegistryService) RegisterStudent(req views.StudentForm, user *model.User
 		CollegeID:    user.CollegeID,
 		Student:      &student,
 		CreatedByID:  user.ID,
-	}
-	if user.College != nil {
-		student.CollegeCode = user.College.Code
 	}
 	cleanedPhone := strings.TrimSpace(req.Phone)
 	if cleanedPhone != "" {

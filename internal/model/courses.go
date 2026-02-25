@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type Courses struct {
 	gorm.Model
-	Name        string
+	Name        string    `gorm:"uniqueIndex;not null"`
 	Description string    `gorm:"type:text;default:''"`
 	Subjects    []Subject `gorm:"many2many:course_subjects;"`
 }
