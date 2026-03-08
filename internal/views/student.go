@@ -5,6 +5,7 @@ import (
 	"collegeWaleServer/internal/enums/college"
 	"collegeWaleServer/internal/model"
 	"collegeWaleServer/internal/utils"
+	"collegeWaleServer/internal/views/common"
 	"strings"
 )
 
@@ -33,7 +34,7 @@ func NewStudentInfoResponse(st model.Student) StudentInfoResponse {
 }
 
 type StudentFilter struct {
-	PageFilter
+	view.PageFilter
 	CourseID   *uint  `json:"course_id,omitempty"`
 	UserID     *int64 `json:"user_id,omitempty"`
 	RollNumber string `json:"roll_number,omitempty"`

@@ -1,7 +1,5 @@
 package view
 
-import "collegeWaleServer/internal/views"
-
 type DataList struct {
 	Pagination PaginationConfig `json:"pagination"`
 	Data       any              `json:"data"`
@@ -10,7 +8,7 @@ type DataList struct {
 
 func NewDataList(data []any, totalRecords int64, page int, pageSize int) DataList {
 	pagination := PaginationConfig{
-		PageFilter: views.PageFilter{
+		PageFilter: PageFilter{
 			AllPages: true,
 			PageNum:  page,
 			PageSize: pageSize,
@@ -38,7 +36,7 @@ func NewDataList(data []any, totalRecords int64, page int, pageSize int) DataLis
 func NewAllDataList(data []any) DataList {
 	tRecords := len(data)
 	pagination := PaginationConfig{
-		PageFilter: views.PageFilter{
+		PageFilter: PageFilter{
 			AllPages: true,
 			PageNum:  1,
 			PageSize: tRecords,

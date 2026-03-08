@@ -6,6 +6,7 @@ import (
 	service "collegeWaleServer/internal/service/auth"
 	"collegeWaleServer/internal/views"
 	auth_view "collegeWaleServer/internal/views/auth"
+	"collegeWaleServer/internal/views/common"
 	"net/http"
 	"os"
 	"time"
@@ -43,20 +44,20 @@ func (h AuthHandler) DoSignup(ctx echo.Context) error {
 	var req auth_view.CollegeSignup
 	err := ctx.Bind(&req)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "can not map", Data: err})
+		return ctx.JSON(http.StatusBadRequest, view.Response{Message: "can not map", Data: err})
 	}
 
 	var msg string
 	_, msg, err = h.as.CollegeSignup(req)
 
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, views.Response{Message: err.Error()})
+		return ctx.JSON(http.StatusInternalServerError, view.Response{Message: err.Error()})
 	}
 
 	if msg != "" {
-		return ctx.JSON(http.StatusOK, views.Response{Message: msg})
+		return ctx.JSON(http.StatusOK, view.Response{Message: msg})
 	} else {
-		return ctx.JSON(http.StatusOK, views.Response{Message: "sucess"})
+		return ctx.JSON(http.StatusOK, view.Response{Message: "sucess"})
 	}
 }
 
@@ -64,15 +65,15 @@ func (h AuthHandler) Verification(ctx echo.Context) error {
 	token := ctx.QueryParam("token")
 
 	if token == "" {
-		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "token is required"})
+		return ctx.JSON(http.StatusBadRequest, view.Response{Message: "token is required"})
 	}
 
 	college, err := h.as.GetCollegeByToken(token)
 	if err != nil {
-		return ctx.JSON(http.StatusUnauthorized, views.Response{Message: "Invalid or expired token"})
+		return ctx.JSON(http.StatusUnauthorized, view.Response{Message: "Invalid or expired token"})
 	}
 
-	return ctx.JSON(http.StatusOK, views.Response{
+	return ctx.JSON(http.StatusOK, view.Response{
 		Message: "Token verified, proceed to set password",
 		Data:    map[string]any{"college_id": college.Code},
 	})
@@ -83,40 +84,40 @@ func (h AuthHandler) SetPassword(ctx echo.Context) error {
 	err := ctx.Bind(&req)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest,
-			views.Response{Message: "can not map", Data: err})
+			view.Response{Message: "can not map", Data: err})
 	}
 
 	if req.Email == "" && req.Code == "" {
-		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "Enter Email or Code"})
+		return ctx.JSON(http.StatusBadRequest, view.Response{Message: "Enter Email or Code"})
 	}
 
 	if req.Password == "" || req.ConfirmPassword == "" {
-		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "Password is required"})
+		return ctx.JSON(http.StatusBadRequest, view.Response{Message: "Password is required"})
 	}
 
 	if req.Password != req.ConfirmPassword {
-		return ctx.JSON(http.StatusBadRequest, views.Response{Message: "Both Password must match"})
+		return ctx.JSON(http.StatusBadRequest, view.Response{Message: "Both Password must match"})
 	}
 
 	if err := h.as.SetPassword(req); err != nil {
-		return ctx.JSON(http.StatusBadRequest, views.Response{Message: err.Error()})
+		return ctx.JSON(http.StatusBadRequest, view.Response{Message: err.Error()})
 	}
-	return ctx.JSON(http.StatusOK, views.Response{Message: "success"})
+	return ctx.JSON(http.StatusOK, view.Response{Message: "success"})
 }
 
 func (h AuthHandler) CollegeLogin(c echo.Context) error {
 	var req auth_view.CollegeLogin
 	err := c.Bind(&req)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, views.Response{Message: "Can not map the request"})
+		return c.JSON(http.StatusBadRequest, view.Response{Message: "Can not map the request"})
 	}
 
 	if req.Code == "" && req.Email == "" {
-		return c.JSON(http.StatusBadRequest, views.Response{Message: "College Code or Email is required"})
+		return c.JSON(http.StatusBadRequest, view.Response{Message: "College Code or Email is required"})
 	}
 
 	if req.Password == "" {
-		return c.JSON(http.StatusBadRequest, views.Response{Message: "Password is required"})
+		return c.JSON(http.StatusBadRequest, view.Response{Message: "Password is required"})
 	}
 
 	college, err := h.as.CollegeLogin(req)
@@ -125,9 +126,9 @@ func (h AuthHandler) CollegeLogin(c echo.Context) error {
 	}
 	token, err := h.generateToken(college)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, views.Response{Message: err.Error()})
+		return c.JSON(http.StatusInternalServerError, view.Response{Message: err.Error()})
 	}
-	return c.JSON(http.StatusOK, views.Response{
+	return c.JSON(http.StatusOK, view.Response{
 		Data: auth_view.CollegeLoginResponse{
 			Name:  college.Name,
 			Code:  college.Code,

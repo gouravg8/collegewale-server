@@ -9,6 +9,11 @@ type Courses struct {
 	Subjects    []Subject `gorm:"many2many:course_subjects;"`
 }
 
+type CollegeCourses struct {
+	CollegeId uint `gorm:"not null"`
+	CourseId  uint `gorm:"not null"`
+}
+
 type CourseSubjects struct {
 	gorm.Model
 	CourseId  uint `gorm:"not null"`

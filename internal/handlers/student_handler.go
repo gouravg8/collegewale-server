@@ -15,18 +15,22 @@ type StudentHandler struct {
 
 func NewStudentHandler(g *echo.Group, st *service.StudentService) *StudentHandler {
 	h := &StudentHandler{st: st}
-	g.GET("/students", h.ListStudents)
+	g.POST("/students", h.ListStudents)
 	return h
 }
 
 // ListStudents retrieves all students with optional filtering
 func (h *StudentHandler) ListStudents(c echo.Context) error {
+	cc := c.(*CustomContext)
+	if cc == nil {
+		return errz.HandleErrx(c, errz.NewUnauthorized("user not found"))
+	}
 	var filter views.StudentFilter
 	err := c.Bind(&filter)
 	if err != nil {
 		return errz.NewBadRequest("invalid request :: failed to bind request")
 	}
-	res, err := h.st.ListStudents(c.Request().Context(), filter)
+	res, err := h.st.ListStudents(cc.user, filter)
 	if err != nil {
 		return errz.HandleErrx(c, err)
 	}

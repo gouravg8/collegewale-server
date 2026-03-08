@@ -5,6 +5,7 @@ import (
 	"collegeWaleServer/internal/enums/roles"
 	service "collegeWaleServer/internal/service/auth"
 	"collegeWaleServer/internal/views"
+	"collegeWaleServer/internal/views/common"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -36,7 +37,7 @@ func (h Registry) RegisterCollege(c echo.Context) error {
 	if err := h.s.RegisterCollege(req, cc.user); err != nil {
 		return errz.HandleErrx(c, err)
 	}
-	return c.JSON(http.StatusOK, views.Response{Message: "success"})
+	return c.JSON(http.StatusOK, view.Response{Message: "success"})
 }
 
 func (h Registry) RegisterStudent(c echo.Context) error {

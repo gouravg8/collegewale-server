@@ -1,8 +1,8 @@
 package service
 
 import (
-	"collegeWaleServer/internal/views"
-	"collegeWaleServer/internal/views/common"
+	views "collegeWaleServer/internal/views"
+	v "collegeWaleServer/internal/views/common"
 	"context"
 	"errors"
 
@@ -105,7 +105,7 @@ func (s *StudentService) Delete(ctx context.Context, id int64) error {
 
 	return nil
 }
-func (s *StudentService) ListStudents(ctx context.Context, filter views.StudentFilter) (view.DataList, error) {
+func (s *StudentService) ListStudents(user *model.User, filter views.StudentFilter) (v.DataList, error) {
 	limit := 10
 	if filter.PageSize > 0 {
 		limit = filter.PageSize
@@ -153,22 +153,21 @@ func (s *StudentService) ListStudents(ctx context.Context, filter views.StudentF
 	var count int64
 	err := query.Count(&count).Error
 	if err != nil {
-		return view.DataList{}, err
+		return v.DataList{}, err
 	}
 
 	var students []model.Student
 	err = query.Offset(offset).Limit(limit).Find(&students).Error
 	if err != nil {
-		return view.DataList{}, err
+		return v.DataList{}, err
 	}
 	if len(students) == 0 {
-		return view.DataList{}, nil
+		return v.DataList{}, nil
 	}
-	response := view.DataList{}
-	response.Pagination.TotalRecords = count
-	myStudents := make([]views.StudentInfoResponse, 0)
+	myStudents := make([]any, 0)
 	for _, student := range students {
 		myStudents = append(myStudents, views.NewStudentInfoResponse(student))
 	}
+	response := v.NewAllDataList(myStudents)
 	return response, nil
 }

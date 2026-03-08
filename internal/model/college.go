@@ -16,7 +16,7 @@ type College struct {
 	Seats        uint   `gorm:"not null"`
 	Logo         string
 	Status       enums.CollegeType `gorm:"not null; defualt:'pending'"`
-	Courses      []Courses
+	Courses      []Courses         `gorm:"many2many:college_courses;"`
 	PasswordHash string
 	CreatedById  uint
 
