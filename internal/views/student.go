@@ -3,6 +3,7 @@ package views
 import (
 	"collegeWaleServer/errz"
 	"collegeWaleServer/internal/enums/college"
+	"collegeWaleServer/internal/model"
 	"collegeWaleServer/internal/utils"
 	"strings"
 )
@@ -16,6 +17,31 @@ type StudentInfoResponse struct {
 	EnrollmentNumber string `json:"enrollment_number"`
 	Semester         string `json:"semester"`
 	Gender           string `json:"gender"`
+}
+
+func NewStudentInfoResponse(st model.Student) StudentInfoResponse {
+	return StudentInfoResponse{
+		FirstName:        st.FirstName,
+		LastName:         st.LastName,
+		RollNumber:       st.RollNumber,
+		Course:           st.Course.Name,
+		Year:             st.Year,
+		EnrollmentNumber: st.EnrollmentNumber,
+		Semester:         st.Semester,
+		Gender:           st.Gender,
+	}
+}
+
+type StudentFilter struct {
+	Limit      int    `json:"limit"`
+	Offset     int    `json:"offset"`
+	CourseID   *uint  `json:"course_id,omitempty"`
+	UserID     *int64 `json:"user_id,omitempty"`
+	RollNumber string `json:"roll_number,omitempty"`
+	Gender     string `json:"gender,omitempty"`
+	Semester   string `json:"semester,omitempty"`
+	Year       int    `json:"year,omitempty"`
+	Enrollment string `json:"enrollment_number,omitempty"`
 }
 
 type StudentForm struct { //TODO add more info as required per user
@@ -54,7 +80,7 @@ func (s StudentForm) IsValid() error {
 		return errz.NewBadRequest("phone is required")
 	}
 	if strings.TrimSpace(s.RollNumber) == "" {
-		return errz.NewBadRequest("role number is required")
+		return errz.NewBadRequest("roll number is required")
 	}
 	err := s.CourseType.IsValidCourseType()
 	if err != nil {
