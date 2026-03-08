@@ -107,11 +107,11 @@ func (s *StudentService) Delete(ctx context.Context, id int64) error {
 }
 func (s *StudentService) ListStudents(ctx context.Context, filter views.StudentFilter) (view.DataList, error) {
 	limit := 10
-	if filter.Limit > 0 {
-		limit = filter.Limit
+	if filter.PageSize > 0 {
+		limit = filter.PageSize
 	}
 
-	offset := filter.Offset
+	offset := filter.PageNum
 	courseID := filter.CourseID
 	userID := filter.UserID
 	rollNumber := filter.RollNumber
@@ -165,7 +165,7 @@ func (s *StudentService) ListStudents(ctx context.Context, filter views.StudentF
 		return view.DataList{}, nil
 	}
 	response := view.DataList{}
-	response.TotalRecords = count
+	response.Pagination.TotalRecords = count
 	myStudents := make([]views.StudentInfoResponse, 0)
 	for _, student := range students {
 		myStudents = append(myStudents, views.NewStudentInfoResponse(student))

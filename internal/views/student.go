@@ -33,8 +33,7 @@ func NewStudentInfoResponse(st model.Student) StudentInfoResponse {
 }
 
 type StudentFilter struct {
-	Limit      int    `json:"limit"`
-	Offset     int    `json:"offset"`
+	PageFilter
 	CourseID   *uint  `json:"course_id,omitempty"`
 	UserID     *int64 `json:"user_id,omitempty"`
 	RollNumber string `json:"roll_number,omitempty"`
