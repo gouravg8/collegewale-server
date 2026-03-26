@@ -1,9 +1,10 @@
 package enums
 
-type CollegeType string
+type StudentStatus string
 
 const (
-	PENDING  CollegeType = "pending"
-	ACTIVE   CollegeType = "active"
-	REJECTED CollegeType = "rejected"
+	Pending  StudentStatus = "pending"
+	Approved StudentStatus = "approved"
+	Unpayed  StudentStatus = "unpayed"
+	Rejected StudentStatus = "rejected"
 )

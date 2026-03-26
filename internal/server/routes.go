@@ -30,12 +30,16 @@ func (s *Server) RegisterRoutes() http.Handler {
 	registryService := auth.NewRegistryService(s.db.GetDatabase())
 	userService := service.NewUserService(s.db.GetDatabase())
 	studentsService := service.NewStudentService(s.db.GetDatabase())
+	collegeService := service.NewCollegeService(s.db.GetDatabase())
+	courseService := service.NewCourseService(s.db.GetDatabase())
 
 	/*-------------Handler Layer-------------*/
 	//##-with auth-##
 	handlers.NewRegistryHandler(apiV1Group, registryService)
 	handlers.NewUserHandler(apiV1Group, userService)
 	handlers.NewStudentHandler(apiV1Group, studentsService)
+	handlers.NewCollegeHandler(apiV1Group, collegeService, courseService)
+
 	//##-without auth-##
 	handlers.NewAuthHandler(apiGroup, authService)
 

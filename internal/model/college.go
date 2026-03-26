@@ -1,7 +1,6 @@
 package model
 
 import (
-	"collegeWaleServer/internal/enums"
 	"time"
 
 	"gorm.io/gorm"
@@ -15,8 +14,7 @@ type College struct {
 	Email        string `gorm:"not null;unique"`
 	Seats        uint   `gorm:"not null"`
 	Logo         string
-	Status       enums.CollegeType `gorm:"not null; defualt:'pending'"`
-	Courses      []Courses         `gorm:"many2many:college_courses;"`
+	Courses      []Courses `gorm:"many2many:college_courses;"`
 	PasswordHash string
 	CreatedById  uint
 

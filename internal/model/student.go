@@ -1,6 +1,8 @@
 package model
 
 import (
+	"collegeWaleServer/internal/enums"
+
 	"gorm.io/gorm"
 )
 
@@ -20,6 +22,7 @@ type Student struct {
 	Semester         string
 	EnrollmentNumber string
 	//relation
-	UserID uint
-	User   *User `gorm:"foreignKey:UserID;references:ID;"`
+	UserID        uint
+	User          *User               `gorm:"foreignKey:UserID;references:ID;"`
+	StudentStatus enums.StudentStatus `gorm:"default:pending;not null"`
 }

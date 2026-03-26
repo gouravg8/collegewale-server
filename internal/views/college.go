@@ -73,3 +73,11 @@ func (c CollegeSignup) IsValid() error {
 	}
 	return nil
 }
+
+type CollegeStatsResponse struct {
+	CollegeName          string `json:"college_name"`
+	TotalStudents        int64  `json:"total_students"`
+	TotalApplications    int64  `json:"total_applications"`
+	TotalApproved        int64  `json:"total_approved"`
+	TotalPendingPayments int64  `json:"total_pending_payments"`
+}
