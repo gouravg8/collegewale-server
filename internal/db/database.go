@@ -68,7 +68,7 @@ func openDb(dbName, user, password, host string, dbPort int) (*gorm.DB, error) {
 	}), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 		NamingStrategy: schema.NamingStrategy{
-			SingularTable: true,
+			SingularTable: false,
 		},
 		TranslateError: false, // Set to true if you want GORM to translate db errors to standard errors
 	})
