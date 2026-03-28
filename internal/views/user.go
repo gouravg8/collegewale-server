@@ -7,6 +7,41 @@ import (
 	"strings"
 )
 
+type CreateUserRequest struct {
+	Username    string        `json:"username"`
+	Email       string        `json:"email"`
+	Password    string        `json:"password"`
+	Phone       string        `json:"phone,omitempty"`
+	Roles       []roles.Roles `json:"roles"`
+	CollegeCode string        `json:"college_code,omitempty"`
+}
+
+func (r CreateUserRequest) IsValid() error {
+	if strings.TrimSpace(r.Username) == "" {
+		return errz.NewBadRequest("username is required")
+	}
+	if !utils.IsEmailValid(r.Email) {
+		return errz.NewBadRequest("valid email is required")
+	}
+	if strings.TrimSpace(r.Password) == "" || len(strings.TrimSpace(r.Password)) < 6 {
+		return errz.NewBadRequest("password must be at least 6 characters")
+	}
+	if r.Phone != "" && !utils.IsPhoneValid(r.Phone) {
+		return errz.NewBadRequest("invalid phone format")
+	}
+	if len(r.Roles) == 0 {
+		return errz.NewBadRequest("at least one role is required")
+	}
+	for _, rr := range r.Roles {
+		switch rr {
+		case roles.Admin, roles.Student, roles.College:
+		default:
+			return errz.NewBadRequest("invalid role: " + string(rr))
+		}
+	}
+	return nil
+}
+
 type UpdateUserRequest struct {
 	Email       *string        `json:"email,omitempty"`
 	Username    *string        `json:"username,omitempty"`

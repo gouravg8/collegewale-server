@@ -17,8 +17,29 @@ type UserHandler struct {
 func NewUserHandler(group *echo.Group, us *service.UserService) *UserHandler {
 	h := &UserHandler{us}
 	group.GET("/myinfo", h.MyInfo)
+	group.POST("/user", WithRole(h.CreateUser, roles.Admin))
 	group.PUT("/user/update", WithRole(h.UpdateUser, roles.Admin))
 	return h
+}
+
+func (h UserHandler) CreateUser(c echo.Context) error {
+	cc := c.(*CustomContext)
+	var req views.CreateUserRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
+	}
+	if err := req.IsValid(); err != nil {
+		return errz.HandleErrx(c, err)
+	}
+	res, err := h.us.CreateUser(req, cc.user)
+	if err != nil {
+		return errz.HandleErrx(c, err)
+	}
+	return c.JSON(http.StatusCreated, views.Response{
+		Status:  http.StatusCreated,
+		Message: "user created",
+		Data:    res,
+	})
 }
 
 func (h UserHandler) MyInfo(ctx echo.Context) error {

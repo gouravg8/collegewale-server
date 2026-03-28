@@ -1,0 +1,31 @@
+meta {
+  name: create user
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{hostv1}}/user
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "username": "john_doe",
+    "email": "john@example.com",
+    "password": "Pass@123",
+    "phone": "9876543210",
+    "roles": ["college"],
+    "college_code": "12"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

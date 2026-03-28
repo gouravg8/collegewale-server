@@ -5,8 +5,11 @@ import (
 	"collegeWaleServer/internal/model"
 	"collegeWaleServer/internal/utils"
 	"collegeWaleServer/internal/views"
+	"errors"
 	"strings"
 
+	"github.com/charmbracelet/log"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
 
@@ -16,6 +19,69 @@ type UserService struct {
 
 func NewUserService(db *gorm.DB) *UserService {
 	return &UserService{db: db}
+}
+
+func (u UserService) CreateUser(req views.CreateUserRequest, creator *model.User) (*views.MyInfo, error) {
+	passwordHash, err := utils.HashPassword(req.Password)
+	if err != nil {
+		log.Errorf("failed to hash password: %v", err)
+		return nil, errz.NewBadRequest("failed to hash password")
+	}
+
+	// Resolve roles from DB
+	var rolesToAssign []model.Role
+	for _, r := range req.Roles {
+		var role model.Role
+		if err := u.db.Where("name = ?", r).First(&role).Error; err != nil {
+			return nil, errz.NewNotFound("role not found: " + string(r))
+		}
+		rolesToAssign = append(rolesToAssign, role)
+	}
+
+	user := model.User{
+		Username:     strings.TrimSpace(req.Username),
+		Email:        strings.TrimSpace(req.Email),
+		PasswordHash: passwordHash,
+		Roles:        rolesToAssign,
+		CreatedByID:  creator.ID,
+	}
+
+	if req.Phone != "" {
+		p := strings.TrimSpace(req.Phone)
+		user.Phone = &p
+	}
+
+	// Optionally link to a college
+	if req.CollegeCode != "" {
+		var college model.College
+		if err := u.db.Where("code = ?", strings.TrimSpace(req.CollegeCode)).First(&college).Error; err != nil {
+			return nil, errz.NewNotFound("college not found")
+		}
+		user.CollegeID = &college.ID
+	}
+
+	if err := u.db.Create(&user).Error; err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			switch {
+			case strings.Contains(pgErr.Detail, "username"):
+				return nil, errz.NewBadRequest("username already exists")
+			case strings.Contains(pgErr.Detail, "email"):
+				return nil, errz.NewBadRequest("email already exists")
+			default:
+				return nil, errz.NewBadRequest("user already exists")
+			}
+		}
+		return nil, err
+	}
+
+	// Reload with associations
+	var created model.User
+	if err := u.db.Preload("Roles").Preload("College").Preload("Student").First(&created, user.ID).Error; err != nil {
+		return nil, err
+	}
+	info := views.NewMyInfo(created)
+	return &info, nil
 }
 
 func (u UserService) MyInfo(user *model.User) (*views.MyInfo, error) {
