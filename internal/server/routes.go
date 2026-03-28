@@ -3,6 +3,7 @@ package server
 import (
 	"collegeWaleServer/internal/handlers"
 	service "collegeWaleServer/internal/service"
+	appSvc "collegeWaleServer/internal/service/application"
 	auth "collegeWaleServer/internal/service/auth"
 	"net/http"
 	"os"
@@ -29,11 +30,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 	authService := auth.NewAuthService(s.db.GetDatabase())
 	registryService := auth.NewRegistryService(s.db.GetDatabase())
 	userService := service.NewUserService(s.db.GetDatabase())
+	applicationService := appSvc.NewApplicationService(s.db.GetDatabase())
 
 	/*-------------Handler Layer-------------*/
 	//##-with auth-##
 	handlers.NewRegistryHandler(apiV1Group, registryService)
 	handlers.NewUserHandler(apiV1Group, userService)
+	handlers.NewApplicationHandler(apiV1Group, applicationService)
 	//##-without auth-##
 	handlers.NewAuthHandler(apiGroup, authService)
 

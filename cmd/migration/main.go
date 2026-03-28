@@ -15,6 +15,7 @@ var modelsToMigrate = []any{
 	&model.Attendance{},
 	&model.Courses{},
 	&model.Role{},
+	&model.Application{},
 }
 
 func main() {
