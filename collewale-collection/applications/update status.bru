@@ -1,0 +1,31 @@
+meta {
+  name: update status
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{hostv1}}/applications/:id/status
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: 1
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "status": "submitted",
+    "remarks": "All documents collected"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

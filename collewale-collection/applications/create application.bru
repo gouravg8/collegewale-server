@@ -1,0 +1,29 @@
+meta {
+  name: create application
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{hostv1}}/applications
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "student_id": 1,
+    "course_type": "gnm",
+    "academic_year": "2026-27",
+    "remarks": "New admission application"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,20 @@
+meta {
+  name: my applications
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{hostv1}}/my/applications
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
