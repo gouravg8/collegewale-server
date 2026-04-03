@@ -24,5 +24,5 @@ type Student struct {
 	//relation
 	UserID        uint
 	User          *User               `gorm:"foreignKey:UserID;references:ID;"`
-	StudentStatus enums.StudentStatus `gorm:"default:pending;not null"`
+	StudentStatus enums.StudentStatus `gorm:"default:'draft';not null"`
 }

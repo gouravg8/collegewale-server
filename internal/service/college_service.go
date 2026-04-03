@@ -47,6 +47,7 @@ func (s *CollegeService) GetStats(user *model.User) (views.CollegeStatsResponse,
 		TotalSubmitted:       stats.Submitted,
 		TotalVerified:        stats.Verified,
 		TotalApproved:        stats.Approved,
+		TotalAdmitted:        stats.Admitted,
 		TotalPendingPayments: stats.Unpayed,
 	}, nil
 

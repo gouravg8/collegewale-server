@@ -2,7 +2,6 @@ package views
 
 import (
 	"collegeWaleServer/errz"
-	"collegeWaleServer/internal/enums/college"
 	"collegeWaleServer/internal/model"
 	"collegeWaleServer/internal/utils"
 	"collegeWaleServer/internal/views/common"
@@ -45,19 +44,19 @@ type StudentFilter struct {
 }
 
 type StudentForm struct { //TODO add more info as required per user
-	Username         string             `json:"username"`
-	Password         string             `json:"password"`
-	FirstName        string             `json:"first_name"`
-	LastName         string             `json:"last_name"`
-	Email            string             `json:"email"`
-	Phone            string             `json:"phone"`
-	RollNumber       string             `json:"roll_number"`
-	CourseType       college.CourseType `json:"course_type"`
-	Year             int                `json:"year"`
-	Gender           string             `json:"gender"`
-	Semester         string             `json:"semester"`
-	EnrollmentNumber string             `json:"enrollment_number"`
-	Subjects         []string           `json:"subjects"`
+	Username         string   `json:"username"`
+	Password         string   `json:"password"`
+	FirstName        string   `json:"first_name"`
+	LastName         string   `json:"last_name"`
+	Email            string   `json:"email"`
+	Phone            string   `json:"phone"`
+	RollNumber       string   `json:"roll_number"`
+	CourseType       string   `json:"course_type"`
+	Year             int      `json:"year"`
+	Gender           string   `json:"gender"`
+	Semester         string   `json:"semester"`
+	EnrollmentNumber string   `json:"enrollment_number"`
+	Subjects         []string `json:"subjects"`
 }
 
 func (s StudentForm) IsValid() error {
@@ -81,10 +80,6 @@ func (s StudentForm) IsValid() error {
 	}
 	if strings.TrimSpace(s.RollNumber) == "" {
 		return errz.NewBadRequest("roll number is required")
-	}
-	err := s.CourseType.IsValidCourseType()
-	if err != nil {
-		return err
 	}
 	if s.Year <= 0 {
 		return errz.NewBadRequest("year cannot be zero")

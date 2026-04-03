@@ -4,10 +4,16 @@ import (
 	"collegeWaleServer/errz"
 	"collegeWaleServer/internal/enums/roles"
 	service "collegeWaleServer/internal/service/auth"
+	"collegeWaleServer/internal/storage"
 	"collegeWaleServer/internal/views"
 	"collegeWaleServer/internal/views/common"
+	"context"
+	"encoding/json"
 	"net/http"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/charmbracelet/log"
 	"github.com/labstack/echo/v4"
 )
 
@@ -26,14 +32,41 @@ func NewRegistryHandler(group *echo.Group, registryService *service.RegistryServ
 }
 
 func (h Registry) RegisterCollege(c echo.Context) error {
+	file, err := c.FormFile("logo")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, errz.NewBadRequest("college logo is required."))
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+	metadata := c.FormValue("metadata")
 	var req views.CollegeRequest
-	if err := c.Bind(&req); err != nil {
+	if err := json.Unmarshal([]byte(metadata), &req); err != nil {
 		return c.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
 	}
 	if err := req.IsValidRequest(); err != nil {
 		return errz.HandleErrx(c, err)
 	}
 	cc := c.(*CustomContext)
+	if cc == nil {
+		return c.JSON(http.StatusOK, errz.NewBadRequest("user not found."))
+	}
+	//objectKey := fmt.Sprintf("logos/%s/%s-%s", req.Code, "a", "test.png")
+	objectKey := "test.png"
+	client := storage.InitR2Client()
+	_, err = client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket:      aws.String("collegewala-server"),
+		Key:         aws.String(objectKey),
+		Body:        src,
+		ContentType: aws.String(file.Header.Get("Content-Type")),
+	})
+	if err != nil {
+		log.Errorf("Failed to upload file: %v", err)
+		return c.JSON(http.StatusBadRequest, errz.NewBadRequest("upload file failed."))
+	}
+
 	if err := h.s.RegisterCollege(req, cc.user); err != nil {
 		return errz.HandleErrx(c, err)
 	}

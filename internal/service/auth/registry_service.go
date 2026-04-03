@@ -92,7 +92,13 @@ func (s RegistryService) RegisterStudent(req views.StudentForm, user *model.User
 		return errz.NewBadRequest("role not found")
 	}
 	var courseID uint
-	err = s.db.Model(&model.Courses{}).Where("name = ?", req.CourseType).Pluck("id", &courseID).Error
+	err = s.db.Model(&model.Courses{}).Where("name = ?", strings.ToUpper(req.CourseType)).Pluck("id", &courseID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errz.NewBadRequest("course not found")
+		}
+		return err
+	}
 	var student = model.Student{
 		FirstName:        req.FirstName,
 		LastName:         req.LastName,
