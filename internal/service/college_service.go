@@ -1,6 +1,7 @@
 package service
 
 import (
+	"collegeWaleServer/internal/enums"
 	"collegeWaleServer/internal/model"
 	"collegeWaleServer/internal/views"
 
@@ -17,19 +18,23 @@ func NewCollegeService(db *gorm.DB) *CollegeService {
 
 func (s *CollegeService) GetStats(user *model.User) (views.CollegeStatsResponse, error) {
 	var stats struct {
-		Total    int64
-		Approved int64
-		Pending  int64
-		Rejected int64
-		Unpayed  int64
+		Total     int64
+		Draft     int64
+		Submitted int64
+		Verified  int64
+		Admitted  int64
+		Approved  int64
+		Unpayed   int64
 	}
 	if err := s.db.Model(&model.Student{}).Joins(`JOIN "user" ON "user".id = student.user_id`).Select(`
-            COUNT(CASE WHEN student.student_status = 'approved' THEN 1 END) as approved,
-            COUNT(CASE WHEN student.student_status = 'rejected' THEN 1 END) as rejected,
-            COUNT(CASE WHEN student.student_status = 'pending' THEN 1 END) as pending,
-            COUNT(CASE WHEN student.student_status = 'unpayed' THEN 1 END) as unpayed,
+            COUNT(CASE WHEN student.student_status = ? THEN 1 END) as draft,
+            COUNT(CASE WHEN student.student_status = ? THEN 1 END) as submitted,
+            COUNT(CASE WHEN student.student_status = ? THEN 1 END) as verified,
+            COUNT(CASE WHEN student.student_status = ? THEN 1 END) as admitted,
+            COUNT(CASE WHEN student.student_status = ? THEN 1 END) as approved,
+            COUNT(CASE WHEN student.student_status = ? THEN 1 END) as unpayed,
             COUNT(*) as total
-        `).Where(`"user".college_id = ?`, user.CollegeID).
+        `, enums.Draft, enums.Submitted, enums.Verified, enums.Admitted, enums.Approved, enums.Unpayed).Where(`"user".college_id = ?`, user.CollegeID).
 		Scan(&stats).Error; err != nil {
 		return views.CollegeStatsResponse{}, err
 	}
@@ -38,7 +43,9 @@ func (s *CollegeService) GetStats(user *model.User) (views.CollegeStatsResponse,
 	return views.CollegeStatsResponse{
 		CollegeName:          user.College.Name,
 		TotalStudents:        stats.Total,
-		TotalApplications:    stats.Pending,
+		TotalDraft:           stats.Draft,
+		TotalSubmitted:       stats.Submitted,
+		TotalVerified:        stats.Verified,
 		TotalApproved:        stats.Approved,
 		TotalPendingPayments: stats.Unpayed,
 	}, nil
