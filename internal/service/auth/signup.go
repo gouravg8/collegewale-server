@@ -56,15 +56,15 @@ func (s AuthService) CollegeSignup(req auth_view.CollegeSignup) (model.College, 
 	inviteTokenExpiry := time.Now().Add(24 * time.Hour)
 
 	college := model.College{
-		Name:         req.Name,
-		Code:         req.Code,
-		Phone:        req.Phone,
-		Email:        req.Email,
-		Courses:      ourCourses,
-		Seats:        req.Seats,
-		InviteToken:  inviteToken,
-		InviteExpiry: inviteTokenExpiry,
-		Logo:         req.Logo,
+		Name:    req.Name,
+		Code:    req.Code,
+		Phone:   req.Phone,
+		Email:   req.Email,
+		Courses: ourCourses,
+		Seats:   req.Seats,
+		//InviteToken:  inviteToken,
+		//InviteExpiry: inviteTokenExpiry,
+		Logo: req.Logo,
 	}
 
 	var existing model.College

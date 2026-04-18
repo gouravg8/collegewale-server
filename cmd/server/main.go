@@ -1,15 +1,15 @@
 package main
 
 import (
+	"collegeWaleServer/internal/server"
 	"context"
 	"log"
 	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"collegeWaleServer/internal/server"
 )
+import _ "crypto/tls"
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
 	// Create context that listens for the interrupt signal from the OS.

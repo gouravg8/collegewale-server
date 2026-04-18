@@ -7,13 +7,10 @@ import (
 	"collegeWaleServer/internal/storage"
 	"collegeWaleServer/internal/views"
 	"collegeWaleServer/internal/views/common"
-	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/charmbracelet/log"
 	"github.com/labstack/echo/v4"
 )
 
@@ -53,18 +50,10 @@ func (h Registry) RegisterCollege(c echo.Context) error {
 	if cc == nil {
 		return c.JSON(http.StatusOK, errz.NewBadRequest("user not found."))
 	}
-	//objectKey := fmt.Sprintf("logos/%s/%s-%s", req.Code, "a", "test.png")
-	objectKey := "test.png"
-	client := storage.InitR2Client()
-	_, err = client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket:      aws.String("collegewala-server"),
-		Key:         aws.String(objectKey),
-		Body:        src,
-		ContentType: aws.String(file.Header.Get("Content-Type")),
-	})
+	objectKey := fmt.Sprintf("logos/%s/%s", req.Code, file.Filename)
+	err = storage.PutFile(objectKey, src, file.Header.Get("content-type"))
 	if err != nil {
-		log.Errorf("Failed to upload file: %v", err)
-		return c.JSON(http.StatusBadRequest, errz.NewBadRequest("upload file failed."))
+		return c.JSON(http.StatusBadRequest, err)
 	}
 
 	if err := h.s.RegisterCollege(req, cc.user); err != nil {

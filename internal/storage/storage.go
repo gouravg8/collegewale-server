@@ -2,8 +2,6 @@ package storage
 
 import (
 	"context"
-	"crypto/tls"
-	"net/http"
 	"os"
 	"strings"
 
@@ -20,15 +18,6 @@ func InitR2Client() *s3.Client {
 	host := os.Getenv("STORAGE_S3_API")
 	cleanHost := strings.TrimPrefix(host, "https://")
 	cleanHost = strings.TrimSuffix(cleanHost, "/")
-
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				MinVersion: tls.VersionTLS12,
-				ServerName: cleanHost,
-			},
-		},
-	}
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
 		config.WithRegion("auto"),
@@ -39,7 +28,6 @@ func InitR2Client() *s3.Client {
 
 	return s3.NewFromConfig(cfg, func(o *s3.Options) {
 		o.BaseEndpoint = aws.String("https://" + cleanHost)
-		o.HTTPClient = httpClient
 		o.UsePathStyle = true
 	})
 }

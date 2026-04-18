@@ -15,7 +15,7 @@ type StudentHandler struct {
 
 func NewStudentHandler(g *echo.Group, st *service.StudentService) *StudentHandler {
 	h := &StudentHandler{st: st}
-	g.POST("student/list", h.ListStudents)
+	g.POST("/student/list", h.ListStudents)
 	return h
 }
 
