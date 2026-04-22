@@ -13,7 +13,6 @@ type CollegeRequest struct {
 	Email   string   `json:"email"`
 	Courses []string `json:"available_courses"`
 	Seats   uint     `json:"seats"`
-	Logo    string   `json:"logo"`
 }
 
 type CollegeResponse struct {

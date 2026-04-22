@@ -24,7 +24,7 @@ func NewRegistryService(db *gorm.DB) *RegistryService {
 	return &RegistryService{db}
 }
 
-func (s RegistryService) RegisterCollege(req views.CollegeRequest, user *model.User) error {
+func (s RegistryService) RegisterCollege(req views.CollegeRequest, user *model.User, objectKey string) error {
 	var courses []model.Courses
 	if err := s.db.Model(&model.Courses{}).Find(&courses).Error; err != nil {
 		return err
@@ -53,7 +53,7 @@ func (s RegistryService) RegisterCollege(req views.CollegeRequest, user *model.U
 		Email:       strings.TrimSpace(req.Email),
 		Courses:     courseList,
 		Seats:       req.Seats,
-		Logo:        req.Logo,
+		Logo:        objectKey,
 		CreatedById: user.ID,
 	}
 

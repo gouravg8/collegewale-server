@@ -56,7 +56,7 @@ func (h Registry) RegisterCollege(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	if err := h.s.RegisterCollege(req, cc.user); err != nil {
+	if err := h.s.RegisterCollege(req, cc.user, objectKey); err != nil {
 		return errz.HandleErrx(c, err)
 	}
 	return c.JSON(http.StatusOK, view.Response{Message: "success"})
