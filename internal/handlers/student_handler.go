@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"collegeWaleServer/errz"
+	"collegeWaleServer/internal/enums"
 	service "collegeWaleServer/internal/service"
 	"collegeWaleServer/internal/views"
 	"net/http"
@@ -13,9 +14,10 @@ type StudentHandler struct {
 	st *service.StudentService
 }
 
-func NewStudentHandler(g *echo.Group, st *service.StudentService) *StudentHandler {
+func NewStudentHandler(group *echo.Group, st *service.StudentService) *StudentHandler {
 	h := &StudentHandler{st: st}
-	g.POST("/student/list", h.ListStudents)
+	group.POST("/student/list", h.ListStudents)
+	group.PUT("/student/update-status", h.UpdateStudentStatus)
 	return h
 }
 
@@ -35,4 +37,14 @@ func (h *StudentHandler) ListStudents(c echo.Context) error {
 		return errz.HandleErrx(c, err)
 	}
 	return c.JSON(http.StatusOK, res)
+}
+
+func (h *StudentHandler) UpdateStudentStatus(c echo.Context) error {
+	st := c.QueryParam("status")
+	status := enums.StudentStatus(st)
+	if err := status.IsValid(); err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, nil)
 }

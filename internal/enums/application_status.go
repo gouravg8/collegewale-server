@@ -1,5 +1,7 @@
 package enums
 
+import "fmt"
+
 type StudentStatus string
 
 const (
@@ -10,3 +12,12 @@ const (
 	Unpayed   StudentStatus = "unpayed"
 	Admitted  StudentStatus = "admitted"
 )
+
+func (s StudentStatus) IsValid() error {
+	switch s {
+	case Draft, Submitted, Verified, Approved, Unpayed, Admitted:
+	default:
+		return fmt.Errorf("invalid status selected")
+	}
+	return nil
+}
