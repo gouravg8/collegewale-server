@@ -4,6 +4,7 @@ import (
 	"collegeWaleServer/errz"
 	"collegeWaleServer/internal/enums"
 	service "collegeWaleServer/internal/service"
+	"collegeWaleServer/internal/utils/common"
 	"collegeWaleServer/internal/views"
 	"net/http"
 
@@ -32,7 +33,7 @@ func (h *StudentHandler) ListStudents(c echo.Context) error {
 	if err != nil {
 		return errz.NewBadRequest("invalid request :: failed to bind request")
 	}
-	res, err := h.st.ListStudents(cc.user, filter)
+	res, err := h.st.ListStudents(filter)
 	if err != nil {
 		return errz.HandleErrx(c, err)
 	}
@@ -40,11 +41,15 @@ func (h *StudentHandler) ListStudents(c echo.Context) error {
 }
 
 func (h *StudentHandler) UpdateStudentStatus(c echo.Context) error {
+	id := c.QueryParam("id")
 	st := c.QueryParam("status")
+	maskedId := common.MaskedId(id)
 	status := enums.StudentStatus(st)
 	if err := status.IsValid(); err != nil {
 		return err
 	}
-
-	return c.JSON(http.StatusOK, nil)
+	if err := h.st.UpdateStudentStatus(maskedId, status); err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	return c.JSON(http.StatusOK, "status updated successfully!")
 }

@@ -1,11 +1,14 @@
 package service
 
 import (
+	"collegeWaleServer/errz"
+	"collegeWaleServer/internal/enums"
+	"collegeWaleServer/internal/utils/common"
 	views "collegeWaleServer/internal/views"
 	v "collegeWaleServer/internal/views/common"
-	"context"
 	"errors"
 
+	"github.com/charmbracelet/log"
 	"gorm.io/gorm"
 
 	"collegeWaleServer/internal/model"
@@ -26,7 +29,7 @@ func NewStudentService(DB *gorm.DB) *StudentService {
 }
 
 // GetByID retrieves a student by ID
-func (s *StudentService) GetByID(ctx context.Context, id int64) (*model.Student, error) {
+func (s *StudentService) GetByID(id int64) (*model.Student, error) {
 	var student model.Student
 	err := s.db.First(&student, uint(id))
 	if err != nil {
@@ -36,76 +39,7 @@ func (s *StudentService) GetByID(ctx context.Context, id int64) (*model.Student,
 	return &student, nil
 }
 
-// Create creates a new student record
-func (s *StudentService) Create(ctx context.Context, student *model.Student) (*model.Student, error) {
-	var created model.Student
-	err := s.db.Create(&student).Error
-	if err != nil {
-		return nil, err
-	}
-
-	created = *student
-	return &created, nil
-}
-
-// Update updates an existing student record
-func (s *StudentService) Update(ctx context.Context, id int64, updates map[string]any) (*model.Student, error) {
-	var student model.Student
-	err := s.db.First(&student, uint(id)).Error
-	if err != nil {
-		return nil, ErrStudentNotFound
-	}
-
-	for key, value := range updates {
-		switch key {
-		case "course":
-			if courseID, ok := value.(uint); ok {
-				var course model.Courses
-				err := s.db.First(&course, courseID).Error
-				if err != nil {
-					return nil, err
-				}
-				student.CourseID = courseID
-			}
-		case "year":
-			if yearVal, ok := value.(int); ok {
-				student.Year = yearVal
-			}
-		case "gender":
-			if genderVal, ok := value.(string); ok {
-				student.Gender = genderVal
-			}
-		case "semester":
-			if semesterVal, ok := value.(string); ok {
-				student.Semester = semesterVal
-			}
-		case "enrollment_number":
-			if enrollmentVal, ok := value.(string); ok {
-				student.EnrollmentNumber = enrollmentVal
-			}
-		}
-	}
-
-	err = s.db.Save(&student).Error
-	if err != nil {
-		return nil, err
-	}
-
-	var updated model.Student
-	s.db.First(&updated, uint(id))
-	return &updated, nil
-}
-
-// Delete deletes a student record
-func (s *StudentService) Delete(ctx context.Context, id int64) error {
-	err := s.db.Delete(&model.Student{}, uint(id))
-	if err != nil {
-		return ErrStudentNotFound
-	}
-
-	return nil
-}
-func (s *StudentService) ListStudents(user *model.User, filter views.StudentFilter) (v.DataList, error) {
+func (s *StudentService) ListStudents(filter views.StudentFilter) (v.DataList, error) {
 	limit := 10
 	if filter.PageSize > 0 {
 		limit = filter.PageSize
@@ -170,4 +104,18 @@ func (s *StudentService) ListStudents(user *model.User, filter views.StudentFilt
 	}
 	response := v.NewAllDataList(myStudents)
 	return response, nil
+}
+
+func (s *StudentService) UpdateStudentStatus(mid common.MaskedId, status enums.StudentStatus) error {
+	id := common.Unmask(mid)
+	if result := s.db.Model(&model.Student{}).
+		Where("id = ? AND status IN (?)", id, status.GetAllowedStatus()).
+		Update("status", status); result.Error != nil {
+		log.Errorf("update student status error: %v", result.Error)
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return errz.NewBadRequest("student not found")
+		}
+		return errz.NewBadRequest("failed to update student status.")
+	}
+	return nil
 }
