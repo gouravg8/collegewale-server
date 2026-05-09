@@ -9,6 +9,7 @@ import (
 )
 
 type StudentInfoResponse struct {
+	Id               uint   `json:"id"`
 	FirstName        string `json:"first_name"`
 	LastName         string `json:"last_name"`
 	RollNumber       string `json:"roll_number"`
@@ -21,6 +22,7 @@ type StudentInfoResponse struct {
 
 func NewStudentInfoResponse(st model.Student) StudentInfoResponse {
 	return StudentInfoResponse{
+		Id:               st.ID,
 		FirstName:        st.FirstName,
 		LastName:         st.LastName,
 		RollNumber:       st.RollNumber,
