@@ -2,37 +2,63 @@ package views
 
 import (
 	"collegeWaleServer/errz"
-	"collegeWaleServer/internal/enums/college"
+	"collegeWaleServer/internal/model"
 	"collegeWaleServer/internal/utils"
+	"collegeWaleServer/internal/views/common"
 	"strings"
 )
 
 type StudentInfoResponse struct {
-	FirstName        string             `json:"first_name"`
-	LastName         string             `json:"last_name"`
-	RollNumber       string             `json:"roll_number"`
-	CourseType       college.CourseType `json:"course_type"`
-	Year             int                `json:"year"`
-	Subjects         []string           `json:"subjects"`
-	EnrollmentNumber string             `json:"enrollment_number"`
-	Semester         string             `json:"semester"`
-	Gender           string             `json:"gender"`
+	Id               uint   `json:"id"`
+	FirstName        string `json:"first_name"`
+	LastName         string `json:"last_name"`
+	RollNumber       string `json:"roll_number"`
+	Course           string `json:"course"`
+	Year             int    `json:"year"`
+	EnrollmentNumber string `json:"enrollment_number"`
+	Semester         string `json:"semester"`
+	Gender           string `json:"gender"`
+}
+
+func NewStudentInfoResponse(st model.Student) StudentInfoResponse {
+	return StudentInfoResponse{
+		Id:               st.ID,
+		FirstName:        st.FirstName,
+		LastName:         st.LastName,
+		RollNumber:       st.RollNumber,
+		Course:           st.Course.Name,
+		Year:             st.Year,
+		EnrollmentNumber: st.EnrollmentNumber,
+		Semester:         st.Semester,
+		Gender:           st.Gender,
+	}
+}
+
+type StudentFilter struct {
+	view.PageFilter
+	CourseID   *uint  `json:"course_id,omitempty"`
+	UserID     *int64 `json:"user_id,omitempty"`
+	RollNumber string `json:"roll_number,omitempty"`
+	Gender     string `json:"gender,omitempty"`
+	Semester   string `json:"semester,omitempty"`
+	Year       int    `json:"year,omitempty"`
+	Enrollment string `json:"enrollment_number,omitempty"`
 }
 
 type StudentForm struct { //TODO add more info as required per user
-	Username         string             `json:"username"`
-	Password         string             `json:"password"`
-	FirstName        string             `json:"first_name"`
-	LastName         string             `json:"last_name"`
-	Email            string             `json:"email"`
-	Phone            string             `json:"phone"`
-	RollNumber       string             `json:"roll_number"`
-	CourseType       college.CourseType `json:"course_type"`
-	Year             int                `json:"year"`
-	Gender           string             `json:"gender"`
-	Semester         string             `json:"semester"`
-	EnrollmentNumber string             `json:"enrollment_number"`
-	Subjects         []string           `json:"subjects"`
+	Username         string   `json:"username"`
+	Password         string   `json:"password"`
+	FirstName        string   `json:"first_name"`
+	LastName         string   `json:"last_name"`
+	Email            string   `json:"email"`
+	Phone            string   `json:"phone"`
+	RollNumber       string   `json:"roll_number"`
+	CourseType       string   `json:"course_type"`
+	Year             int      `json:"year"`
+	Gender           string   `json:"gender"`
+	Semester         string   `json:"semester"`
+	EnrollmentNumber string   `json:"enrollment_number"`
+	Subjects         []string `json:"subjects"`
 }
 
 func (s StudentForm) IsValid() error {
@@ -55,11 +81,7 @@ func (s StudentForm) IsValid() error {
 		return errz.NewBadRequest("phone is required")
 	}
 	if strings.TrimSpace(s.RollNumber) == "" {
-		return errz.NewBadRequest("role number is required")
-	}
-	err := s.CourseType.IsValidCourseType()
-	if err != nil {
-		return err
+		return errz.NewBadRequest("roll number is required")
 	}
 	if s.Year <= 0 {
 		return errz.NewBadRequest("year cannot be zero")

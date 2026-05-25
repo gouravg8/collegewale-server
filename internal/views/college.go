@@ -2,19 +2,17 @@ package views
 
 import (
 	"collegeWaleServer/errz"
-	"collegeWaleServer/internal/enums/college"
 	"collegeWaleServer/internal/utils"
 	"strings"
 )
 
 type CollegeRequest struct {
-	Name       string             `json:"name"`
-	Code       string             `json:"code"`
-	Phone      string             `json:"phone"`
-	Email      string             `json:"email"`
-	CourseType college.CourseType `json:"course_type"` //TODO one college can have multiple courses
-	Seats      uint               `json:"seats"`
-	Logo       string             `json:"logo"`
+	Name    string   `json:"name"`
+	Code    string   `json:"code"`
+	Phone   string   `json:"phone"`
+	Email   string   `json:"email"`
+	Courses []string `json:"available_courses"`
+	Seats   uint     `json:"seats"`
 }
 
 type CollegeResponse struct {
@@ -42,11 +40,8 @@ func (c *CollegeRequest) IsValidRequest() error {
 	if strings.TrimSpace(c.Code) == "" {
 		return errz.NewBadRequest("college code cannot be empty")
 	}
-	if string(c.CourseType) == "" {
-		return errz.NewBadRequest("course type cannot be empty")
-	}
-	if err := c.CourseType.IsValidCourseType(); err != nil {
-		return err
+	if len(c.Courses) == 0 {
+		return errz.NewBadRequest("college should provide at least one course")
 	}
 	if c.Seats <= 0 {
 		return errz.NewBadRequest("seats must be greater than zero")
@@ -76,4 +71,15 @@ func (c CollegeSignup) IsValid() error {
 		return errz.NewBadRequest("phone is required")
 	}
 	return nil
+}
+
+type CollegeStatsResponse struct {
+	CollegeName          string `json:"college_name"`
+	TotalStudents        int64  `json:"total_students"`
+	TotalDraft           int64  `json:"total_draft"`
+	TotalSubmitted       int64  `json:"total_submitted"`
+	TotalVerified        int64  `json:"total_verified"`
+	TotalApproved        int64  `json:"total_approved"`
+	TotalAdmitted        int64  `json:"total_admitted"`
+	TotalPendingPayments int64  `json:"total_pending_payments"`
 }

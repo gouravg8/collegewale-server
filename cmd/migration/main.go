@@ -12,7 +12,6 @@ var modelsToMigrate = []any{
 	&model.Student{},
 	&model.Subject{},
 	&model.User{},
-	&model.Attendance{},
 	&model.Courses{},
 	&model.Role{},
 }

@@ -21,7 +21,7 @@ func NewUserHandler(group *echo.Group, us *service.UserService) *UserHandler {
 func (h UserHandler) MyInfo(ctx echo.Context) error {
 	cc := ctx.(*CustomContext)
 	if cc == nil {
-		return ctx.JSON(http.StatusOK, errz.NewNotFound("user not found"))
+		return ctx.JSON(http.StatusNotFound, errz.NewNotFound("user not found"))
 	}
 	res, err := h.us.MyInfo(cc.user)
 	if err != nil {

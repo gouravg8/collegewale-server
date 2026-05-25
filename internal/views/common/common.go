@@ -1,4 +1,4 @@
-package views
+package view
 
 type PageFilter struct {
 	AllPages bool `json:"all_pages"`
@@ -28,14 +28,6 @@ type Response struct {
 	Status  int    `json:"status,omitempty"`
 	Message string `json:"message,omitempty"`
 	Data    any    `json:"data,omitempty"`
-}
-
-type ListResponse struct {
-	TotalRecords int `json:"total_records"`
-	Data         any `json:"data,omitempty"`
-
-	FailedCount  int64 `json:"failed_count,omitempty"`
-	MessageCount int64 `json:"message_count,omitempty"`
 }
 
 type CountResult struct {

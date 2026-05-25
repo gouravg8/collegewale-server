@@ -44,17 +44,12 @@ func NewMyInfo(u model.User) MyInfo {
 	}
 	if u.Student != nil {
 		s := u.Student
-		subjects := make([]string, 0)
-		for _, sbj := range s.Subject {
-			subjects = append(subjects, sbj.Name)
-		}
 		myInfo.Student = &StudentInfoResponse{
 			FirstName:        s.FirstName,
 			LastName:         s.LastName,
 			RollNumber:       s.RollNumber,
-			CourseType:       s.CourseType,
+			Course:           s.Course.Name,
 			Year:             s.Year,
-			Subjects:         subjects,
 			EnrollmentNumber: s.EnrollmentNumber,
 			Semester:         s.Semester,
 			Gender:           s.Gender,

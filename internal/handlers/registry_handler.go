@@ -4,7 +4,11 @@ import (
 	"collegeWaleServer/errz"
 	"collegeWaleServer/internal/enums/roles"
 	service "collegeWaleServer/internal/service/auth"
+	"collegeWaleServer/internal/storage"
 	"collegeWaleServer/internal/views"
+	"collegeWaleServer/internal/views/common"
+	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -25,18 +29,37 @@ func NewRegistryHandler(group *echo.Group, registryService *service.RegistryServ
 }
 
 func (h Registry) RegisterCollege(c echo.Context) error {
+	file, err := c.FormFile("logo")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, errz.NewBadRequest("college logo is required."))
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+	metadata := c.FormValue("metadata")
 	var req views.CollegeRequest
-	if err := c.Bind(&req); err != nil {
+	if err := json.Unmarshal([]byte(metadata), &req); err != nil {
 		return c.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
 	}
 	if err := req.IsValidRequest(); err != nil {
 		return errz.HandleErrx(c, err)
 	}
 	cc := c.(*CustomContext)
-	if err := h.s.RegisterCollege(req, cc.user); err != nil {
+	if cc == nil {
+		return c.JSON(http.StatusOK, errz.NewBadRequest("user not found."))
+	}
+	objectKey := fmt.Sprintf("logos/%s/%s", req.Code, file.Filename)
+	err = storage.PutFile(objectKey, src, file.Header.Get("content-type"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	if err := h.s.RegisterCollege(req, cc.user, objectKey); err != nil {
 		return errz.HandleErrx(c, err)
 	}
-	return c.JSON(http.StatusOK, views.Response{Message: "success"})
+	return c.JSON(http.StatusOK, view.Response{Message: "success"})
 }
 
 func (h Registry) RegisterStudent(c echo.Context) error {

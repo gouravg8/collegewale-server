@@ -30,33 +30,25 @@ func NewAuthService(db *gorm.DB) *AuthService {
 }
 
 func (s AuthService) CollegeSignup(req auth_view.CollegeSignup) (model.College, string, error) {
-	// --- Input Validation ---
-	if strings.TrimSpace(req.Name) == "" {
-		return model.College{}, "", fmt.Errorf("college name cannot be empty")
-	}
-	if strings.TrimSpace(req.Email) == "" {
-		return model.College{}, "", fmt.Errorf("email cannot be empty")
-	}
-	if !utils.IsEmailValid(req.Email) {
-		return model.College{}, "", fmt.Errorf("invalid email format")
-	}
-	if strings.TrimSpace(req.Phone) == "" {
-		return model.College{}, "", fmt.Errorf("phone cannot be empty")
-	}
-	if !utils.IsPhoneValid(req.Phone) {
-		return model.College{}, "", fmt.Errorf("invalid phone format")
-	}
-	if strings.TrimSpace(req.Code) == "" {
-		return model.College{}, "", fmt.Errorf("college code cannot be empty")
-	}
-	if string(req.CourseType) == "" {
-		return model.College{}, "", fmt.Errorf("course type cannot be empty")
-	}
-	if err := req.CourseType.IsValidCourseType(); err != nil {
+	//---input validation
+	if err := req.IsValid(); err != nil {
 		return model.College{}, "", err
 	}
-	if req.Seats <= 0 {
-		return model.College{}, "", fmt.Errorf("seats must be greater than zero")
+	var courses = make(map[string]model.Courses)
+	var ourCourses = make([]model.Courses, 0)
+	var availableCourses []model.Courses
+	if err := s.db.Model(&model.Courses{}).Find(&availableCourses).Error; err != nil {
+		return model.College{}, "", err
+	}
+
+	for _, course := range availableCourses {
+		courses[course.Name] = course
+	}
+
+	for _, course := range req.Courses {
+		if c, found := courses[course]; found {
+			ourCourses = append(ourCourses, c)
+		}
 	}
 
 	// --- gen token ---
@@ -64,15 +56,15 @@ func (s AuthService) CollegeSignup(req auth_view.CollegeSignup) (model.College, 
 	inviteTokenExpiry := time.Now().Add(24 * time.Hour)
 
 	college := model.College{
-		Name:         req.Name,
-		Code:         req.Code,
-		Phone:        req.Phone,
-		Email:        req.Email,
-		CourseType:   req.CourseType,
-		Seats:        req.Seats,
-		InviteToken:  inviteToken,
-		InviteExpiry: inviteTokenExpiry,
-		Logo:         req.Logo,
+		Name:    req.Name,
+		Code:    req.Code,
+		Phone:   req.Phone,
+		Email:   req.Email,
+		Courses: ourCourses,
+		Seats:   req.Seats,
+		//InviteToken:  inviteToken,
+		//InviteExpiry: inviteTokenExpiry,
+		Logo: req.Logo,
 	}
 
 	var existing model.College
