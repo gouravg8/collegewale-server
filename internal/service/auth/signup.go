@@ -180,7 +180,7 @@ func (s AuthService) SignIn(req views.MeLogin, key string) (*views.MeResponse, e
 	} else {
 		return nil, errz.NewBadRequest("Please provide a valid Username, Email or Phone.")
 	}
-	if err := q.Preload("Roles").First(&me).Error; err != nil {
+	if err := q.Preload("Roles").Preload("College").First(&me).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errz.NewNotFound("User not found")
 		}
@@ -205,6 +205,7 @@ func (s AuthService) SignIn(req views.MeLogin, key string) (*views.MeResponse, e
 	}
 	if me.College != nil {
 		res.CollegeCode = me.College.Code
+		res.CollegeName = me.College.Name
 	}
 	if me.Phone != nil {
 		res.Phone = *me.Phone

@@ -24,36 +24,47 @@ var DB *gorm.DB
 
 var dbService *Service
 
+// These package vars are overridden directly by database_test.go to point
+// at an ephemeral testcontainer; New() falls back to them when DATABASE_URL
+// and DB_DATABASE are both unset.
+var (
+	database = os.Getenv("DB_DATABASE")
+	password = os.Getenv("DB_PASSWORD")
+	username = os.Getenv("DB_USERNAME")
+	port     = os.Getenv("DB_PORT")
+	host     = os.Getenv("DB_HOST")
+)
+
 // New initializes a new db connection (singleton)
 func New() *Service {
 	if dbService != nil {
 		return dbService
 	}
-	var (
-		database = os.Getenv("DB_DATABASE")
-		password = os.Getenv("DB_PASSWORD")
-		username = os.Getenv("DB_USERNAME")
-		port     = os.Getenv("DB_PORT")
-		host     = os.Getenv("DB_HOST")
-	)
-	if host == "" {
-		host = "localhost"
-	}
-	if port == "" {
-		port = "5432"
-	}
 
-	if portInt, err := strconv.Atoi(port); err != nil {
-		log.Fatalf("Could not parse PORT environment variable :: %v", err)
-		return nil
+	var err error
+	if dsn := os.Getenv("DATABASE_URL"); dsn != "" {
+		DB, err = openDbWithDSN(dsn)
 	} else {
-		DB, err = openDb(database, username, password, host, portInt)
-		if err != nil {
-			log.Fatalf("Could not connect to db: %v", err)
+		h := host
+		if h == "" {
+			h = "localhost"
 		}
-		dbService = &Service{db: DB}
-		return dbService
+		p := port
+		if p == "" {
+			p = "5432"
+		}
+		portInt, perr := strconv.Atoi(p)
+		if perr != nil {
+			log.Fatalf("Could not parse DB_PORT environment variable :: %v", perr)
+			return nil
+		}
+		DB, err = openDb(database, username, password, h, portInt)
 	}
+	if err != nil {
+		log.Fatalf("Could not connect to db: %v", err)
+	}
+	dbService = &Service{db: DB}
+	return dbService
 }
 
 func openDb(dbName, user, password, host string, dbPort int) (*gorm.DB, error) {
@@ -61,9 +72,12 @@ func openDb(dbName, user, password, host string, dbPort int) (*gorm.DB, error) {
 		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable",
 		host, user, password, dbName, dbPort,
 	)
+	return openDbWithDSN(connStr)
+}
 
+func openDbWithDSN(dsn string) (*gorm.DB, error) {
 	return gorm.Open(postgres.New(postgres.Config{
-		DSN:                  connStr,
+		DSN:                  dsn,
 		PreferSimpleProtocol: true,
 	}), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),

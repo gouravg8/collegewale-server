@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/labstack/echo/v4"
@@ -28,7 +27,9 @@ func (s *Server) Init() error {
 	e := echo.New()
 	s.e = e
 	s.db = *db.New()
+	
 
+	e.Use(middleware.Gzip())
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -41,7 +42,6 @@ func (s *Server) Init() error {
 
 	/*----echo-config----*/
 	e.Server.Handler = s.RegisterRoutes()
-	e.Server.IdleTimeout = time.Minute
 
 	return nil
 }

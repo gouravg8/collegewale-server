@@ -3,7 +3,8 @@ package roles
 type Roles string
 
 const (
-	Admin   Roles = "admin"
-	Student Roles = "student"
-	College Roles = "college"
+	Admin        Roles = "admin"
+	CollegeAdmin Roles = "college_admin"
+	Staff        Roles = "staff"
+	Student      Roles = "student"
 )

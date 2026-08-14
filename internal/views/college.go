@@ -73,6 +73,37 @@ func (c CollegeSignup) IsValid() error {
 	return nil
 }
 
+// CollegeWithAdminRequest is the minimal payload for the combined
+// "create college + its college admin" flow: just the college name and
+// the admin's login details. Everything else (code, seats, phone/email
+// fallbacks) is derived or defaulted server-side.
+type CollegeWithAdminRequest struct {
+	CollegeName   string `json:"college_name"`
+	AdminUsername string `json:"admin_username"`
+	AdminEmail    string `json:"admin_email"`
+	AdminPhone    string `json:"admin_phone"`
+	AdminPassword string `json:"admin_password"`
+}
+
+func (c CollegeWithAdminRequest) IsValid() error {
+	if strings.TrimSpace(c.CollegeName) == "" {
+		return errz.NewBadRequest("college name is required")
+	}
+	if strings.TrimSpace(c.AdminUsername) == "" {
+		return errz.NewBadRequest("admin username is required")
+	}
+	if strings.TrimSpace(c.AdminEmail) == "" {
+		return errz.NewBadRequest("admin email is required")
+	}
+	if !utils.IsEmailValid(c.AdminEmail) {
+		return errz.NewBadRequest("invalid admin email format")
+	}
+	if strings.TrimSpace(c.AdminPassword) == "" {
+		return errz.NewBadRequest("admin password is required")
+	}
+	return nil
+}
+
 type CollegeStatsResponse struct {
 	CollegeName          string `json:"college_name"`
 	TotalStudents        int64  `json:"total_students"`

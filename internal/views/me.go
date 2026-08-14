@@ -17,6 +17,7 @@ type MeResponse struct {
 	Phone       string        `json:"phone,omitempty"`
 	Roles       []roles.Roles `json:"roles"`
 	CollegeCode string        `json:"college_code,omitempty"`
+	CollegeName string        `json:"college_name,omitempty"`
 	Token       string        `json:"token"`
 }
 
