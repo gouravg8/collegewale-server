@@ -32,6 +32,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	studentsService := service.NewStudentService(s.db.GetDatabase())
 	collegeService := service.NewCollegeService(s.db.GetDatabase())
 	courseService := service.NewCourseService(s.db.GetDatabase())
+	feeService := service.NewFeeService(s.db.GetDatabase())
 
 	/*-------------Handler Layer-------------*/
 	//##-with auth-##
@@ -39,6 +40,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	handlers.NewUserHandler(apiV1Group, userService)
 	handlers.NewStudentHandler(apiV1Group, studentsService)
 	handlers.NewCollegeHandler(apiV1Group, collegeService, courseService)
+	handlers.NewFeeHandler(apiV1Group, feeService)
 
 	//##-without auth-##
 	handlers.NewAuthHandler(apiGroup, authService)

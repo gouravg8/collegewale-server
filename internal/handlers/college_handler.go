@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"collegeWaleServer/errz"
+	"collegeWaleServer/internal/enums/roles"
 	"collegeWaleServer/internal/service"
 	"collegeWaleServer/internal/views"
 	"net/http"
@@ -18,7 +19,16 @@ func NewCollegeHandler(g *echo.Group, cs *service.CollegeService, css *service.C
 	h := &CollegeHandler{cs: cs, css: css}
 	g.POST("/college/courses", h.ListCourses)
 	g.GET("/college/stats", h.GetStats)
+	g.GET("/colleges", WithRole(h.ListColleges, roles.Admin))
 	return h
+}
+
+func (h CollegeHandler) ListColleges(c echo.Context) error {
+	res, err := h.cs.ListColleges()
+	if err != nil {
+		return errz.HandleErrx(c, err)
+	}
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h CollegeHandler) ListCourses(c echo.Context) error {

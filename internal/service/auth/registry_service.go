@@ -9,12 +9,28 @@ import (
 	"collegeWaleServer/internal/views"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/charmbracelet/log"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
+
+var nonAlphaNumeric = regexp.MustCompile(`[^A-Z0-9]`)
+
+func generateCollegeCode(name string) string {
+	slug := nonAlphaNumeric.ReplaceAllString(strings.ToUpper(strings.TrimSpace(name)), "")
+	if len(slug) > 6 {
+		slug = slug[:6]
+	}
+	if slug == "" {
+		slug = "CLG"
+	}
+	suffix := strings.ToUpper(strings.ReplaceAll(uuid.NewString(), "-", ""))[:4]
+	return slug + suffix
+}
 
 type RegistryService struct {
 	db *gorm.DB
@@ -151,9 +167,9 @@ func (s RegistryService) RegisterCollegeAccount(req views.CollegeSignup, user *m
 		return errz.NewBadRequest("failed to save user password")
 	}
 	var role model.Role
-	err = s.db.Model(&model.Role{}).Where("name = ?", roles.College).First(&role).Error
+	err = s.db.Model(&model.Role{}).Where("name = ?", roles.CollegeAdmin).First(&role).Error
 	if err != nil {
-		log.Errorf("Failed to find college role: %v", err)
+		log.Errorf("Failed to find college_admin role: %v", err)
 		return errz.NewBadRequest("role not found")
 	}
 	var college model.College
@@ -190,4 +206,69 @@ func (s RegistryService) RegisterCollegeAccount(req views.CollegeSignup, user *m
 		return err
 	}
 	return nil
+}
+
+// RegisterCollegeWithAdmin creates a College with sane defaults (auto
+// generated code, zero courses, a nominal seat count) and its College
+// Admin login user in a single transaction -- the minimal flow where the
+// platform Admin only supplies a college name and the admin's own details.
+func (s RegistryService) RegisterCollegeWithAdmin(req views.CollegeWithAdminRequest, createdBy *model.User) error {
+	passwordHash, err := utils.HashPassword(req.AdminPassword)
+	if err != nil {
+		log.Errorf("Failed to hash password: %v", err)
+		return errz.NewBadRequest("failed to save admin password")
+	}
+
+	var role model.Role
+	if err := s.db.Model(&model.Role{}).Where("name = ?", roles.CollegeAdmin).First(&role).Error; err != nil {
+		log.Errorf("Failed to find college_admin role: %v", err)
+		return errz.NewBadRequest("role not found")
+	}
+
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		college := model.College{
+			Name:        strings.TrimSpace(req.CollegeName),
+			Code:        generateCollegeCode(req.CollegeName),
+			Phone:       strings.TrimSpace(req.AdminPhone),
+			Email:       strings.TrimSpace(req.AdminEmail),
+			Seats:       1,
+			CreatedById: createdBy.ID,
+		}
+		if err := tx.Create(&college).Error; err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+				return errz.NewBadRequest("a college with this name already exists")
+			}
+			return err
+		}
+
+		admin := model.User{
+			Username:     strings.TrimSpace(req.AdminUsername),
+			Email:        strings.TrimSpace(req.AdminEmail),
+			PasswordHash: passwordHash,
+			Roles:        []model.Role{role},
+			CollegeID:    &college.ID,
+			CreatedByID:  createdBy.ID,
+		}
+		cleanedPhone := strings.TrimSpace(req.AdminPhone)
+		if cleanedPhone != "" {
+			admin.Phone = &cleanedPhone
+		}
+		if err := tx.Create(&admin).Error; err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+				ex := pgErr.Detail
+				switch {
+				case strings.Contains(ex, "username"):
+					return errz.NewBadRequest("username already exists")
+				case strings.Contains(ex, "email"):
+					return errz.NewBadRequest("email already exists")
+				default:
+					return errz.NewBadRequest("admin user already exists")
+				}
+			}
+			return err
+		}
+		return nil
+	})
 }

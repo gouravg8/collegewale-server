@@ -24,8 +24,27 @@ func NewRegistryHandler(group *echo.Group, registryService *service.RegistryServ
 	}
 	group.POST("/register/college", WithRole(h.RegisterCollege, roles.Admin))
 	group.POST("/register/college/user", WithRole(h.RegisterCollegeAccount, roles.Admin))
-	group.POST("/register/student", WithRole(h.RegisterStudent, roles.Admin, roles.College))
+	group.POST("/register/college-with-admin", WithRole(h.RegisterCollegeWithAdmin, roles.Admin))
+	group.POST("/register/student", WithRole(h.RegisterStudent, roles.CollegeAdmin))
 	return h
+}
+
+func (h Registry) RegisterCollegeWithAdmin(c echo.Context) error {
+	cc := c.(*CustomContext)
+	if cc == nil {
+		return c.JSON(http.StatusOK, errz.NewBadRequest("user not found."))
+	}
+	var req views.CollegeWithAdminRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, errz.NewBadRequest("invalid request"))
+	}
+	if err := req.IsValid(); err != nil {
+		return errz.HandleErrx(c, err)
+	}
+	if err := h.s.RegisterCollegeWithAdmin(req, cc.user); err != nil {
+		return errz.HandleErrx(c, err)
+	}
+	return c.JSON(http.StatusOK, view.Response{Message: "success"})
 }
 
 func (h Registry) RegisterCollege(c echo.Context) error {

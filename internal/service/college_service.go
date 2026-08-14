@@ -16,6 +16,18 @@ func NewCollegeService(db *gorm.DB) *CollegeService {
 	return &CollegeService{db: db}
 }
 
+func (s *CollegeService) ListColleges() ([]views.CollegeResponse, error) {
+	var colleges []model.College
+	if err := s.db.Model(&model.College{}).Find(&colleges).Error; err != nil {
+		return nil, err
+	}
+	res := make([]views.CollegeResponse, 0, len(colleges))
+	for _, c := range colleges {
+		res = append(res, views.CollegeResponse{Name: c.Name, Code: c.Code, Logo: c.Logo})
+	}
+	return res, nil
+}
+
 func (s *CollegeService) GetStats(user *model.User) (views.CollegeStatsResponse, error) {
 	var stats struct {
 		Total     int64
